@@ -1,8 +1,12 @@
-#include "mainwindow.h"
-
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDebug>
+#include <QDir>
+#include <QStringList>
+#include <vector>
+
+#include "mainwindow.h"
+#include "subtractor.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +49,16 @@ int main(int argc, char *argv[])
     else{
         w.show();
     }
+
+    QDir dirSubject("E:/Dossiers personnels/Cours et projet/Entretiens/C++/Kinovis/Ressources/Capture-sequence/cam-007");
+    QDir dirBackground("E:/Dossiers personnels/Cours et projet/Entretiens/C++/Kinovis/Ressources/Background-sequence/cam-007");
+    QFileInfoList subjectSequence = dirSubject.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
+    QFileInfoList backgroundSequence = dirBackground.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
+    subtractor subt(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString(), 0.5);
+    /*for(auto const& path : subjectSequence){
+        subt.addImageToTreat(path.absoluteFilePath().toStdString());
+    }*/
+    subt.subtract();
 
     return a.exec();
 }
