@@ -32,24 +32,22 @@ std::array<int, 3> ImgProcAlgo::differenceRGB(std::array<int, 3> const& imageA, 
     std::array<int, 3> diffImg;
 
     // Calculate the difference between the RGB channels of image A and image B.
-    int diffRed = imageA[0] - imageB[0];
-    int diffGreen = imageA[1] - imageB[1];
-    int diffBlue = imageA[2] - imageB[2];
-
-    int diffGlobal = diffRed + diffGreen + diffBlue;
+    int grayValueA = ImgProcAlgo::bgr2gray(imageA[0], imageA[1], imageA[2]);
+    int grayValueB = ImgProcAlgo::bgr2gray(imageB[0], imageB[1], imageB[2]);
+    int grayDiff = std::abs(grayValueA-grayValueB);
 
     // Threshold check
-    if(diffGlobal <= threshold){
-        diffImg = {255,255,255};
+    if(grayDiff <= threshold){
+        diffImg = {0,0,0};
     }
     else{
-        diffImg = {0,0,0};
+        diffImg = {255,255,255};
     }
 
     return diffImg;
 }
 
-cv::Mat ImgProcAlgo::grayImagesDifferencing(cv::Mat const& imageA, cv::Mat const& imageB, uchar const& threshold){
+cv::Mat ImgProcAlgo::imagesDifferencing(cv::Mat const& imageA, cv::Mat const& imageB, int const& threshold){
     // Check if the two images have the same size. To simplify the calculations, we will only process images of the same size. If not, we return the imageA by default.
     if(imageA.cols != imageB.cols || imageA.rows != imageB.rows){
         std::cerr << "Error : the two images must have the same size." << std::endl;
@@ -62,31 +60,41 @@ cv::Mat ImgProcAlgo::grayImagesDifferencing(cv::Mat const& imageA, cv::Mat const
         return imageA;
     }
 
+    // Check if the two images have the same number of channels
+    if(imageA.channels() != imageB.channels()){
+        std::cerr << "Error : the two images must have the same number of channels." << std::endl;
+        return imageA;
+    }
+
     // Init differencing image
-    cv::Mat diffImg = cv::Mat(imageA.rows, imageA.cols, CV_8UC1);
+    cv::Mat diffImg = cv::Mat(imageA.rows, imageA.cols, CV_8UC3);
 
     // Process
     for(int i=0; i<imageA.cols; i++){
         for(int j=0; j<imageA.rows; j++){
-            int diffValue = std::abs(imageA.at<uchar>(j,i) - imageB.at<uchar>(j,i));
+            // Get BGR values of each image
+            cv::Vec3b intensityA = imageA.at<cv::Vec3b>(j,i);
+            cv::Vec3b intensityB = imageB.at<cv::Vec3b>(j,i);
 
-            std::cout << "\nImage A " << imageA.at<uchar>(j,i) << std::endl;
-            std::cout <<"Image B " << imageB.at<uchar>(j,i) << std::endl;
-            std::cout << "Diff value " << imageA.at<uchar>(j,i) - imageB.at<uchar>(j,i) << std::endl;
-            std::cout << "Diff absolute value " << diffValue << std::endl;
-            std::cout << "Diff value norm " << diffValue/255 << std::endl;
+            // Init 3D arrays
+            std::array<int,3> bgrA;
+            std::array<int,3> bgrB;
 
-            // Check thresold
-            if(diffValue/255 <= threshold){
-                diffValue = 0;
-            }
-            else{
-                diffValue = 255;
+            // Loop through all channels to get pixels values
+            for(int k=0; k < imageA.channels(); k++){
+                bgrA[k] = (int)intensityA.val[k];
+                bgrB[k] = (int)intensityB.val[k];
             }
 
+            // Calculate difference value
+            std::array<int,3> bgrDiff = ImgProcAlgo::differenceRGB(bgrA, bgrB, threshold);
 
-            diffImg.at<uchar>(j,i) = diffValue;
-
+            // Set the new difference values in the difference image
+            cv::Vec3b intensityDiff;
+            for(int k=0; k < diffImg.channels(); k++){
+                intensityDiff[k] = bgrDiff[k];
+            }
+            diffImg.at<cv::Vec3b>(j,i) = intensityDiff;
         }
     }
 

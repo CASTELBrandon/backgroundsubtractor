@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
     QDir dirBackground("E:/Dossiers personnels/Cours et projet/Entretiens/C++/Kinovis/Ressources/Background-sequence/cam-007");
     QFileInfoList subjectSequence = dirSubject.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
     QFileInfoList backgroundSequence = dirBackground.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
-    subtractor subt(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString(), 0.5);
+
+    subtractor subt(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString(), 15);
     /*for(auto const& path : subjectSequence){
         subt.addImageToTreat(path.absoluteFilePath().toStdString());
     }*/

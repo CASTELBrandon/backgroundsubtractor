@@ -1,13 +1,13 @@
 #include "subtractor.h"
 
-subtractor::subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath, float const& p_threshold)
+subtractor::subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath, int const& p_threshold)
 {
     sequenceToProc.push_back(imageToTreatPath);
     backgroundSequence.push_back(backgroundImagePath);
     threshold = p_threshold;
 }
 
-subtractor::subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence, float const& p_threshold)
+subtractor::subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence, int const& p_threshold)
 {
     sequenceToProc = p_sequenceToProc;
     backgroundSequence = p_backgroundSequence;
@@ -39,13 +39,10 @@ void subtractor::subtract(){
 
             // Check if we managed to read the image before continuing
             if(!subjectImg.empty()){
-                // Convert the images in grayscale
-                cv::Mat subGrayImg = ImgProcAlgo::convertImgBGR2GRAY(subjectImg);
-                cv::Mat backgGrayImg = ImgProcAlgo::convertImgBGR2GRAY(backgImg);
-                cv::Mat diffImg = ImgProcAlgo::grayImagesDifferencing(subGrayImg, backgGrayImg);
+                cv::Mat diffImg = ImgProcAlgo::imagesDifferencing(subjectImg, backgImg, threshold);
 
-                cv::imshow("Subject image", subGrayImg);
-                cv::imshow("Background image", backgGrayImg);
+                cv::imshow("Subject image", subjectImg);
+                cv::imshow("Background image", backgImg);
                 cv::imshow("Difference image", diffImg);
             }
 
