@@ -1,15 +1,6 @@
 #include "ImgProcAlgo.h"
 
-ImgProcAlgo::ImgProcAlgo(std::string const& imageToTreatPath, std::string const& backgroundImagePath)
-{
-    sequenceToProc.push_back(imageToTreatPath);
-    backgroundSequence.push_back(backgroundImagePath);
-}
-
-ImgProcAlgo::ImgProcAlgo(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence){
-    sequenceToProc = p_sequenceToProc;
-    backgroundSequence = p_backgroundSequence;
-}
+/////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     // Init grayscale mat
@@ -24,7 +15,7 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
             double r = imgToProc.at<cv::Vec3b>(j,i)[2];
 
             // Calculate the corresponding gray value
-            int grayValue = ImgProcAlgo::bgr2gray(b, g, r);
+            int grayValue = rgb2gray(b, g, r);
 
             // Set the new value in the gray image
             grayImg.at<uchar>(j,i) = grayValue;
@@ -34,14 +25,26 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     return grayImg;
 }
 
+void ImgProcAlgo::showConvertedImages(){
+    for(cv::Mat const& img : convertedImages){
+        cv::imshow("Converted images", img);
+        cv::waitKey(0);
+    }
+    cv::destroyAllWindows();
+}
+
 /////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////
 
 void ImgProcAlgo::addImageToTreat(std::string const& imagePath){
     sequenceToProc.push_back(imagePath);
 }
 
-void ImgProcAlgo::addBackgroundImage(const std::string& imagePath){
-    backgroundSequence.push_back(imagePath);
+bool ImgProcAlgo::isImgSequenceEmpty(){
+    return sequenceToProc.empty();
+}
+
+std::vector<cv::Mat> ImgProcAlgo::getConvertedImages(){
+     return convertedImages;
 }
 
 

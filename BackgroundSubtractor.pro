@@ -10,13 +10,19 @@ CONFIG += c++11 console
 
 SOURCES += \
     BackgroundSubtractor.cpp \
+    BackgroundSubtractorCK.cpp \
+    BackgroundSubtractorGS.cpp \
     ImgProcAlgo.cpp \
+    PixelRGB.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     BackgroundSubtractor.h \
+    BackgroundSubtractorCK.h \
+    BackgroundSubtractorGS.h \
     ImgProcAlgo.h \
+    PixelRGB.h \
     mainwindow.h
 
 TRANSLATIONS += \
