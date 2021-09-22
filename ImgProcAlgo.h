@@ -13,6 +13,8 @@ class ImgProcAlgo
 {
 public:
     explicit ImgProcAlgo() = default;
+    explicit ImgProcAlgo(std::string const& imagePath);
+    explicit ImgProcAlgo(std::vector<std::string> const& imagePathList);
 
     // Image processing methods
     static inline int rgb2gray(double const& red, double const& green, double const& blue){return std::round(red*0.299 + green*0.587 + blue*0.114);};
@@ -26,7 +28,7 @@ public:
     void showConvertedImages();
 
 protected:
-    std::vector<std::string> sequenceToProc;
+    std::vector<std::string> imagesToProc;
     std::vector<cv::Mat> convertedImages;
 };
 

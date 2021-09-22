@@ -1,5 +1,13 @@
 #include "ImgProcAlgo.h"
 
+ImgProcAlgo::ImgProcAlgo(std::string const& imagePath){
+    imagesToProc.push_back(imagePath);
+}
+
+ImgProcAlgo::ImgProcAlgo(std::vector<std::string> const& imagePathList){
+    imagesToProc = imagePathList;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
@@ -43,11 +51,11 @@ void ImgProcAlgo::process(){
 /////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////
 
 void ImgProcAlgo::addImageToTreat(std::string const& imagePath){
-    sequenceToProc.push_back(imagePath);
+    imagesToProc.push_back(imagePath);
 }
 
 bool ImgProcAlgo::isImgSequenceEmpty(){
-    return sequenceToProc.empty();
+    return imagesToProc.empty();
 }
 
 std::vector<cv::Mat> ImgProcAlgo::getConvertedImages(){
