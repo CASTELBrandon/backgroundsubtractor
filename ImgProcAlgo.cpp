@@ -1,8 +1,14 @@
-#include "imgprocalgo.h"
+#include "ImgProcAlgo.h"
 
-ImgProcAlgo::ImgProcAlgo()
+ImgProcAlgo::ImgProcAlgo(std::string const& imageToTreatPath, std::string const& backgroundImagePath)
 {
+    sequenceToProc.push_back(imageToTreatPath);
+    backgroundSequence.push_back(backgroundImagePath);
+}
 
+ImgProcAlgo::ImgProcAlgo(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence){
+    sequenceToProc = p_sequenceToProc;
+    backgroundSequence = p_backgroundSequence;
 }
 
 cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
@@ -26,6 +32,16 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     }
 
     return grayImg;
+}
+
+/////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////
+
+void ImgProcAlgo::addImageToTreat(std::string const& imagePath){
+    sequenceToProc.push_back(imagePath);
+}
+
+void ImgProcAlgo::addBackgroundImage(const std::string& imagePath){
+    backgroundSequence.push_back(imagePath);
 }
 
 

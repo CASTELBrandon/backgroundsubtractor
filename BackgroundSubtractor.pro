@@ -9,15 +9,15 @@ CONFIG += c++11 console
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    imgprocalgo.cpp \
+    BackgroundSubtractor.cpp \
+    ImgProcAlgo.cpp \
     main.cpp \
-    mainwindow.cpp \
-    subtractor.cpp
+    mainwindow.cpp
 
 HEADERS += \
-    imgprocalgo.h \
-    mainwindow.h \
-    subtractor.h
+    BackgroundSubtractor.h \
+    ImgProcAlgo.h \
+    mainwindow.h
 
 TRANSLATIONS += \
     BackgroundSubtractor_en_150.ts

@@ -1,20 +1,15 @@
-#ifndef SUBTRACTOR_H
-#define SUBTRACTOR_H
+#ifndef BACKGROUNDSUBTRACTOR_H
+#define BACKGROUNDSUBTRACTOR_H
 
 #define DEFAULT_THRESHOLD 127
 
-#include <vector>
-#include <string>
-#include <opencv2/opencv.hpp>
-#include <iostream>
+#include "ImgProcAlgo.h"
 
-#include "imgprocalgo.h"
-
-class subtractor : public ImgProcAlgo
+class BackgroundSubtractor : public ImgProcAlgo
 {
 public:
-    explicit subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath);
-    explicit subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence);
+    explicit BackgroundSubtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath);
+    explicit BackgroundSubtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence);
 
     // Grey scale methods
     static cv::Mat imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int const& threshold= DEFAULT_THRESHOLD);
@@ -25,15 +20,7 @@ public:
     static PixelRGB pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold);
     static int calculateDiffCK(int const& value, int const& min, int const& max);
 
-    // Methods to manage image pathes
-    void addImageToTreat(std::string const& imagePath);
-    void addBackgroundImage(std::string const& imagePath);
-
     void subtract();
-
-private:
-    std::vector<std::string> sequenceToProc;
-    std::vector<std::string> backgroundSequence;
 };
 
-#endif // SUBTRACTOR_H
+#endif // BACKGROUNDSUBTRACTOR_H
