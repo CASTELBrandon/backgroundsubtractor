@@ -17,6 +17,7 @@ public:
     // Image processing methods
     static inline int rgb2gray(double const& red, double const& green, double const& blue){return std::round(red*0.299 + green*0.587 + blue*0.114);};
     static cv::Mat convertImgBGR2GRAY(cv::Mat const& imgToProc);
+    virtual void process();
 
     // Methods to manage image pathes
     void addImageToTreat(std::string const& imagePath);

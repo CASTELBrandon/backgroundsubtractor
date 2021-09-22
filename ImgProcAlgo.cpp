@@ -33,6 +33,13 @@ void ImgProcAlgo::showConvertedImages(){
     cv::destroyAllWindows();
 }
 
+void ImgProcAlgo::process(){
+    // Check if there are images to process
+    if(isImgSequenceEmpty()){
+        throw std::runtime_error("There is no image to process");
+    }
+}
+
 /////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////
 
 void ImgProcAlgo::addImageToTreat(std::string const& imagePath){

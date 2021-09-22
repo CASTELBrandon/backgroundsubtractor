@@ -7,6 +7,8 @@ struct PixelRGB{
     int b;
 
     PixelRGB(int p_r=0, int p_g=0, int p_b=0);
+
+    bool operator==(int const& num) const;
 };
 
 #endif // PIXELRGB_H

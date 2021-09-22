@@ -1,5 +1,12 @@
 #include "BackgroundSubtractorCK.h"
 
+BackgroundSubtractorCK::BackgroundSubtractorCK(PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold)
+{
+    darkBackPixel = p_darkBackPixel;
+    lightBackPixel = p_lightBackPixel;
+    threshold = p_threshold;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 int BackgroundSubtractorCK::calculateRangeDiff(int const& pixelValue, int const& min, int const& max){
@@ -16,8 +23,12 @@ int BackgroundSubtractorCK::calculateRangeDiff(int const& pixelValue, int const&
 PixelRGB BackgroundSubtractorCK::calculateDiffPixel(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
     /*
      * Return a black pixel if the pixel in parameter is in the color range, and a white pixel otherwise.
-     * NB : CK means "chromakey".
      */
+    // Check if darkbackpixel or lightbackpixel contains a color
+    if(darkBackPixel == 0 || lightBackPixel == 0){
+        throw std::invalid_argument("The DarkBackPixel and lightBackPixel must contain a colored pixel, therefore different from {0,0,0}.");
+    }
+
     PixelRGB pixelDiff;
 
     // Get the difference value with the color range
@@ -72,11 +83,9 @@ cv::Mat BackgroundSubtractorCK::imgMaskCalculation(const cv::Mat &image, PixelRG
     return imgMask;
 }
 
-void BackgroundSubtractorCK::process(PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
-    // Check if there are images to process
-    if(isImgSequenceEmpty()){
-        throw std::runtime_error("There is no image to process");
-    }
+void BackgroundSubtractorCK::process(){
+    // Call parent method
+    ImgProcAlgo::process();
 
     // Loop for each image to process
     for(std::string const& imgPath : sequenceToProc){

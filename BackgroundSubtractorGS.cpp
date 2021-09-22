@@ -1,5 +1,10 @@
 #include "BackgroundSubtractorGS.h"
 
+BackgroundSubtractorGS::BackgroundSubtractorGS(int const& p_threshold, int const& p_backImgNumber){
+    threshold = p_threshold;
+    backImgNumber = p_backImgNumber;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 PixelRGB BackgroundSubtractorGS::pixelDiffRgb2Gray(PixelRGB const& pixelA, PixelRGB const& pixelB, int const& threshold){
@@ -76,11 +81,9 @@ cv::Mat BackgroundSubtractorGS::imgMaskCalculation(cv::Mat const& imageA, cv::Ma
     return imgMask;
 }
 
-void BackgroundSubtractorGS::process(int const& threshold, int const& backImgNumber){
-    // Check if there are images to process
-    if(isImgSequenceEmpty()){
-        throw std::runtime_error("There is no image to process");
-    }
+void BackgroundSubtractorGS::process(){
+    // Call parent method
+    ImgProcAlgo::process();
 
     // Check if the background sequence is empty
     if(isBackSequenceEmpty()){
@@ -88,7 +91,7 @@ void BackgroundSubtractorGS::process(int const& threshold, int const& backImgNum
     }
 
     // Read the selected background image
-     cv::Mat backgImg = cv::imread(backgroundSequence[backImgNumber]);
+    cv::Mat backgImg = cv::imread(backgroundSequence[backImgNumber]);
 
     // Loop for each image to process
     for(std::string const& imgPath : sequenceToProc){
