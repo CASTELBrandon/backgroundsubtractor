@@ -7,6 +7,8 @@ class BackgroundSubtractor : public ImgProcAlgo
 {
 public:
     explicit BackgroundSubtractor() = default;
+    explicit BackgroundSubtractor(std::string const& imagePath);
+    explicit BackgroundSubtractor(std::vector<std::string> const& imagePathList);
 
     void process() = 0;
 

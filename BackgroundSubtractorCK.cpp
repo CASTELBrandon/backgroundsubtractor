@@ -7,6 +7,22 @@ BackgroundSubtractorCK::BackgroundSubtractorCK(PixelRGB const& p_darkBackPixel, 
     threshold = p_threshold;
 }
 
+BackgroundSubtractorCK::BackgroundSubtractorCK(std::string const& imagePath, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold)
+    : BackgroundSubtractor(imagePath)
+{
+    darkBackPixel = p_darkBackPixel;
+    lightBackPixel = p_lightBackPixel;
+    threshold = p_threshold;
+}
+
+BackgroundSubtractorCK::BackgroundSubtractorCK(std::vector<std::string> const& imagePathList, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold)
+    : BackgroundSubtractor(imagePathList)
+{
+    darkBackPixel = p_darkBackPixel;
+    lightBackPixel = p_lightBackPixel;
+    threshold = p_threshold;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 int BackgroundSubtractorCK::calculateRangeDiff(int const& pixelValue, int const& min, int const& max){
@@ -88,7 +104,7 @@ void BackgroundSubtractorCK::process(){
     ImgProcAlgo::process();
 
     // Loop for each image to process
-    for(std::string const& imgPath : sequenceToProc){
+    for(std::string const& imgPath : imagesToProc){
         // Initialize the images
         cv::Mat subjectImg = cv::imread(imgPath);
 

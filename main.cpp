@@ -6,7 +6,9 @@
 #include <vector>
 
 #include "mainwindow.h"
-#include "BackgroundSubtractor.h"
+#include "BackgroundSubtractorGS.h"
+#include "BackgroundSubtractorCK.h"
+#include "PixelRGB.h"
 
 int main(int argc, char *argv[])
 {
@@ -54,6 +56,14 @@ int main(int argc, char *argv[])
     QDir dirBackground("E:/Dossiers personnels/Cours et projet/Entretiens/C++/Kinovis/Ressources/Background-sequence/cam-007");
     QFileInfoList subjectSequence = dirSubject.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
     QFileInfoList backgroundSequence = dirBackground.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
+
+    BackgroundSubtractorGS bgSubGS(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString(), 20, 0);
+    bgSubGS.process();
+    bgSubGS.showConvertedImages("Grayscale image mask");
+
+    BackgroundSubtractorCK bgSubCK(subjectSequence[0].absoluteFilePath().toStdString(), PixelRGB(23,67,16), PixelRGB(135,168,75), 20);
+    bgSubCK.process();
+    bgSubCK.showConvertedImages("Chromakey image mask");
 
     return a.exec();
 }

@@ -33,12 +33,10 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     return grayImg;
 }
 
-void ImgProcAlgo::showConvertedImages(){
+void ImgProcAlgo::showConvertedImages(std::string const& windowName){
     for(cv::Mat const& img : convertedImages){
-        cv::imshow("Converted images", img);
-        cv::waitKey(0);
+        cv::imshow(windowName, img);
     }
-    cv::destroyAllWindows();
 }
 
 void ImgProcAlgo::process(){

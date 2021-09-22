@@ -5,6 +5,22 @@ BackgroundSubtractorGS::BackgroundSubtractorGS(int const& p_threshold, int const
     backImgNumber = p_backImgNumber;
 }
 
+BackgroundSubtractorGS::BackgroundSubtractorGS(std::string const& imagePath, std::string const& p_backImagePath, int const& p_threshold, int const& p_backImgNumber)
+    : BackgroundSubtractor(imagePath)
+{
+    threshold = p_threshold;
+    backImgNumber = p_backImgNumber;
+    backgroundSequence.push_back(p_backImagePath);
+}
+
+BackgroundSubtractorGS::BackgroundSubtractorGS(std::vector<std::string> const& imagePathList, std::vector<std::string> const& p_backImagePathList, int const& p_threshold, int const& p_backImgNumber)
+    : BackgroundSubtractor(imagePathList)
+{
+    threshold = p_threshold;
+    backImgNumber = p_backImgNumber;
+    backgroundSequence = p_backImagePathList;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 PixelRGB BackgroundSubtractorGS::pixelDiffRgb2Gray(PixelRGB const& pixelA, PixelRGB const& pixelB, int const& threshold){
@@ -94,7 +110,7 @@ void BackgroundSubtractorGS::process(){
     cv::Mat backgImg = cv::imread(backgroundSequence[backImgNumber]);
 
     // Loop for each image to process
-    for(std::string const& imgPath : sequenceToProc){
+    for(std::string const& imgPath : imagesToProc){
         // Initialize the images
         cv::Mat subjectImg = cv::imread(imgPath);
 

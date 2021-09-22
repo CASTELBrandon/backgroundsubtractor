@@ -25,7 +25,7 @@ public:
     void addImageToTreat(std::string const& imagePath);
     bool isImgSequenceEmpty();
     std::vector<cv::Mat> getConvertedImages();
-    void showConvertedImages();
+    void showConvertedImages(std::string const& windowName = "Converted images");
 
 protected:
     std::vector<std::string> imagesToProc;
