@@ -1,18 +1,18 @@
 #include "subtractor.h"
 
-subtractor::subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath, int const& p_threshold)
+subtractor::subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath)
 {
     sequenceToProc.push_back(imageToTreatPath);
     backgroundSequence.push_back(backgroundImagePath);
-    threshold = p_threshold;
 }
 
-subtractor::subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence, int const& p_threshold)
+subtractor::subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence)
 {
     sequenceToProc = p_sequenceToProc;
     backgroundSequence = p_backgroundSequence;
-    threshold = p_threshold;
 }
+
+/////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////
 
 void subtractor::addImageToTreat(std::string const& imagePath){
     sequenceToProc.push_back(imagePath);
@@ -22,12 +22,14 @@ void subtractor::addBackgroundImage(const std::string &imagePath){
     backgroundSequence.push_back(imagePath);
 }
 
-std::array<int, 3> subtractor::pixelDiffRgb2Gray(std::array<int, 3> const& pixelA, std::array<int, 3> const& pixelB, int const& threshold){
-    std::array<int, 3> diff;
+/////////////////////////////////// GRAYSCALE METHODS ///////////////////////////////////
+
+PixelRGB subtractor::pixelDiffRgb2Gray(PixelRGB const& pixelA, PixelRGB const& pixelB, int const& threshold){
+    PixelRGB diff;
 
     // Calculate the difference between the RGB channels of image A and image B.
-    int grayValueA = ImgProcAlgo::bgr2gray(pixelA[0], pixelA[1], pixelA[2]);
-    int grayValueB = ImgProcAlgo::bgr2gray(pixelB[0], pixelB[1], pixelB[2]);
+    int grayValueA = ImgProcAlgo::bgr2gray(pixelA.r, pixelA.g, pixelA.b);
+    int grayValueB = ImgProcAlgo::bgr2gray(pixelB.r, pixelB.g, pixelB.b);
     int grayDiff = std::abs(grayValueA-grayValueB);
 
     // Threshold check
@@ -68,7 +70,7 @@ cv::Mat subtractor::imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int 
 
     // Check if the threshold is between 0 and 255
     if(threshold < 0 || threshold > 255){
-        std::cerr << "Error : the threshold value must be between 0 and 255." << std::endl;
+        std::cerr << "Error : the threshold value must be between 0 and 255" << std::endl;
         return imageA;
     }
 
@@ -82,24 +84,18 @@ cv::Mat subtractor::imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int 
             cv::Vec3b intensityA = imageA.at<cv::Vec3b>(j,i);
             cv::Vec3b intensityB = imageB.at<cv::Vec3b>(j,i);
 
-            // Init 3D arrays
-            std::array<int,3> bgrA;
-            std::array<int,3> bgrB;
-
-            // Loop through all channels to get pixels values
-            for(int k=0; k < imageA.channels(); k++){
-                bgrA[k] = (int)intensityA.val[k];
-                bgrB[k] = (int)intensityB.val[k];
-            }
+            // Init pixels. Beware of cv::Vec3b, they return BGR values and not RGB
+            PixelRGB pixelA = {intensityA[2], intensityA[1], intensityA[0]};
+            PixelRGB pixelB = {intensityB[2], intensityB[1], intensityB[0]};
 
             // Calculate difference value
-            std::array<int,3> bgrDiff = pixelDiffRgb2Gray(bgrA, bgrB, threshold);
+            PixelRGB pixelDiff = pixelDiffRgb2Gray(pixelA, pixelB, threshold);
 
             // Set the new difference values in the difference image
             cv::Vec3b intensityDiff;
-            for(int k=0; k < diffImg.channels(); k++){
-                intensityDiff[k] = bgrDiff[k];
-            }
+            intensityDiff[0] = pixelDiff.b;
+            intensityDiff[1] = pixelDiff.g;
+            intensityDiff[2] = pixelDiff.r;
             diffImg.at<cv::Vec3b>(j,i) = intensityDiff;
         }
     }
@@ -107,50 +103,30 @@ cv::Mat subtractor::imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int 
     return diffImg;
 }
 
-bool subtractor::inColorRange(int const& pixelValue, int const& colorValue, int const& offset){
-    /*
-     * This method allows to know if a R, G or B value of a pixel is in the color range (colorValue - offet) and (colorValue + offset)
-     */
-    return ((pixelValue <= (colorValue + offset)) && (pixelValue >= (colorValue - offset)));
-}
+/////////////////////////////////// CHROMAKEY METHODS ///////////////////////////////////
 
 int subtractor::calculateDiffCK(int const& pixelValue, int const& min, int const& max){
     /*
      * This method calculate the difference between a pixel value and a color range. If the value is in the range, it returns 0.
      */
+    if(pixelValue < min) return min - pixelValue;
+    if(pixelValue > max) return pixelValue - max;
 
-    /*std::cout << "\nPixel value : " << pixelValue << std::endl;
-    std::cout << "min : " << min << std::endl;
-    std::cout << "max : " << max << std::endl;*/
-
-    if(pixelValue < min){
-        return min - pixelValue;
-    }
-    else if(pixelValue > max){
-        return pixelValue - max;
-    }
-    else{
-        return 0;
-    }
+    return 0;
 }
 
-PixelRGB subtractor::pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, float const& tolerance){
+PixelRGB subtractor::pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
     /*
      * Return a black pixel if the pixel in parameter is in the color range, and a white pixel otherwise.
+     * NB : CK means "chromakey".
      */
     PixelRGB pixelDiff;
 
     // Get the difference value with the color range and normalize it to be between 0 and 1
     int diffValue = subtractor::calculateDiffCK(pixelToCheck.r, darkBackPixel.r, lightBackPixel.r) + subtractor::calculateDiffCK(pixelToCheck.g, darkBackPixel.g, lightBackPixel.g) +  subtractor::calculateDiffCK(pixelToCheck.b, darkBackPixel.b, lightBackPixel.b);
 
-    // Normalize the diffValue between 0 and 1
-    float diffValueNorm = (float)diffValue/(255*3);
-
-    /*std::cout << "Diff value : " << diffValue << std::endl;
-    std::cout << "Diff value normalized : " << diffValueNorm << std::endl;*/
-
     // Check if the RGB values of the pixel are in the color ranges
-    if(diffValueNorm < tolerance){
+    if(diffValue <= threshold){
         pixelDiff.r = 0;
         pixelDiff.g = 0;
         pixelDiff.b = 0;
@@ -164,7 +140,7 @@ PixelRGB subtractor::pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkB
     return pixelDiff;
 }
 
-cv::Mat subtractor::imgMaskCK(const cv::Mat &image, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, float const& tolerance){
+cv::Mat subtractor::imgMaskCK(const cv::Mat &image, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
     // Check if it is a RGB image
     if(image.channels() != 3){
         std::cerr << "Error : you must set a RGB image." << std::endl;
@@ -183,7 +159,7 @@ cv::Mat subtractor::imgMaskCK(const cv::Mat &image, PixelRGB const& darkBackPixe
             PixelRGB imagePixel(intensity[2], intensity[1], intensity[0]);
 
             // Get mask pixel value
-            PixelRGB pixelMask = subtractor::pixelCK(imagePixel, darkBackPixel, lightBackPixel, tolerance);
+            PixelRGB pixelMask = subtractor::pixelCK(imagePixel, darkBackPixel, lightBackPixel, threshold);
 
             // Set the pixel value
             imgMask.at<cv::Vec3b>(j,i)[0] = pixelMask.b;
@@ -212,13 +188,11 @@ void subtractor::subtract(){
 
             // Check if we managed to read the image before continuing
             if(!subjectImg.empty()){
-                //cv::Mat diffImg = imgMaskGS(subjectImg, backgImg, threshold);
+                //cv::Mat imgMask = imgMaskGS(subjectImg, backgImg, 10);
 
                 PixelRGB darkBackPixel(23,67,16);
                 PixelRGB lightBackPixel(135,169,75);
-                cv::Mat imgSubjectMask = imgMaskCK(subjectImg, darkBackPixel, lightBackPixel, 0.05);
-                //cv::Mat imgBackMask = imgMaskCK(backgImg, darkBackPixel, lightBackPixel, 0.05);
-                //cv::Mat imgMask = imgMaskGS(imgSubjectMask, imgBackMask, 127);
+                cv::Mat imgMask = imgMaskCK(subjectImg, darkBackPixel, lightBackPixel, 10);
 
                 cv::imshow("Subject image", subjectImg);
                 cv::imshow("Background image", backgImg);

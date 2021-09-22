@@ -13,17 +13,16 @@
 class subtractor : public ImgProcAlgo
 {
 public:
-    explicit subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath, int const& p_threshold = DEFAULT_THRESHOLD);
-    explicit subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence, int const& p_threshold = DEFAULT_THRESHOLD);
+    explicit subtractor(std::string const& imageToTreatPath, std::string const& backgroundImagePath);
+    explicit subtractor(std::vector<std::string> const& p_sequenceToProc, std::vector<std::string> const& p_backgroundSequence);
 
     // Grey scale methods
-    static cv::Mat imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int const& threshold=127);
-    static std::array<int, 3> pixelDiffRgb2Gray(std::array<int, 3> const& imageA, std::array<int, 3> const& imageB, int const& threshold=127);
+    static cv::Mat imgMaskGS(cv::Mat const& imageA, cv::Mat const& imageB, int const& threshold= DEFAULT_THRESHOLD);
+    static PixelRGB pixelDiffRgb2Gray(PixelRGB const& imageA, PixelRGB const& imageB, int const& threshold= DEFAULT_THRESHOLD);
 
     // Chroma key methods
-    static cv::Mat imgMaskCK(const cv::Mat &image, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, float const& tolerance = 0.5f);
-    static PixelRGB pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, float const& tolerance);
-    static bool inColorRange(int const& pixelValue, int const& colorValue, int const& offset);
+    static cv::Mat imgMaskCK(const cv::Mat &image, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold= DEFAULT_THRESHOLD);
+    static PixelRGB pixelCK(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold);
     static int calculateDiffCK(int const& value, int const& min, int const& max);
 
     // Methods to manage image pathes
@@ -33,7 +32,6 @@ public:
     void subtract();
 
 private:
-    int threshold;
     std::vector<std::string> sequenceToProc;
     std::vector<std::string> backgroundSequence;
 };

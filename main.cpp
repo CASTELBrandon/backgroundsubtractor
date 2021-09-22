@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     QFileInfoList subjectSequence = dirSubject.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
     QFileInfoList backgroundSequence = dirBackground.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
 
-    subtractor subt(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString(), 15);
+    subtractor subt(subjectSequence[0].absoluteFilePath().toStdString(), backgroundSequence[0].absoluteFilePath().toStdString());
     /*for(auto const& path : subjectSequence){
         subt.addImageToTreat(path.absoluteFilePath().toStdString());
     }*/
