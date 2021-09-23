@@ -55,6 +55,14 @@ int main(int argc, char *argv[])
         QCommandLineOption backgroundNumOption(QStringList() << "bgnum" << "backgroundnumber", "For each camera folder, the 'grayscale' algorithm will select a background image to compare with all the images of the moving subject, from the corresponding camera. So you need to choose a background image number if you use this algorithm.", "path");
         parser.addOption(backgroundNumOption);
 
+        // Chromakey options
+        QString chromDescpt = "The chromakey algorithm works by using a range of colored pixels to find out whether a pixel from the image to process is within this range or not. Therefore you must specify a darkpixel and lightpixel RGB coordinates.\nExample for a green screen : '--dbgp 0,10,0 --lbgp 0,255,0'.";
+        QCommandLineOption darkBackPixelOption(QStringList() << "dbgp" << "darkbackgroundpixel", chromDescpt, "list value");
+        parser.addOption(darkBackPixelOption);
+
+        QCommandLineOption lightBackPixelOption(QStringList() << "lbgp" << "lightbackgroundpixel", chromDescpt, "list value");
+        parser.addOption(lightBackPixelOption);
+
         // Process commands
         parser.process(a);
 
@@ -84,6 +92,15 @@ int main(int argc, char *argv[])
             // Check if a number of background image has been specified
             if(!parser.isSet(backgroundNumOption)){
                 qCritical() << "Error : if you want to use the 'grayscale' algorithm, you must specify a background number. See help command (-h) for more details.";
+                return -1;
+            }
+        }
+
+        // Check if the chromakey algorithm has been selected
+        if(parser.isSet(algorithmOption) && parser.value(algorithmOption) == "chromakey"){
+            // Check if the darkpixel and lightpixel options have been specified
+            if(!(parser.isSet(darkBackPixelOption) && parser.isSet(lightBackPixelOption))){
+                qCritical() << "Error: if you want to use the 'chromakey' algorithm, you must specify RGB values for 'lbgp' and 'dbgp'. Example for a green screen : '--dbgp 0,10,0 --lbgp 0,255,0'.";
                 return -1;
             }
         }
@@ -149,6 +166,26 @@ int main(int argc, char *argv[])
                 bgSubGS.process();
             }
 
+            ////////// CHROMAKEY ALGORITHM //////////
+            else if(algo == "chromakey"){
+                // Get the rest of the parameters
+                QStringList darkPixelValues = parser.value(darkBackPixelOption).split(",", Qt::SkipEmptyParts);
+                QStringList lightPixelValues = parser.value(lightBackPixelOption).split(",", Qt::SkipEmptyParts);
+
+                // Check if there are 3 values
+                if(darkPixelValues.size() != 3 || lightPixelValues.size() != 3){
+                    qCritical() << "The parameters lightbackgroundpixel and darkbackgroundpixel must have 3 values between 0 and 255.";
+                    return -1;
+                }
+
+                // Create the two colored pixels
+                PixelRGB darkPixel = {darkPixelValues[0].toInt(), darkPixelValues[1].toInt(), darkPixelValues[2].toInt()};
+                PixelRGB lightPixel = {lightPixelValues[0].toInt(), lightPixelValues[1].toInt(), lightPixelValues[2].toInt()};
+
+                // Process
+                BackgroundSubtractorCK bgSubCK(filesToProc, darkPixel, lightPixel, threshold);
+                bgSubCK.process();
+            }
         }
 
         return 0;
