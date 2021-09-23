@@ -26,6 +26,9 @@ public:
     bool isImgSequenceEmpty();
     std::vector<cv::Mat> getConvertedImages();
     void showConvertedImages(std::string const& windowName = "Converted images");
+    inline void clearImagesToConvert() {imagesToProc.clear();};
+    inline void clearConvertedImages() {convertedImages.clear();};
+    virtual void clearAllImages();
 
 protected:
     std::vector<std::string> imagesToProc;

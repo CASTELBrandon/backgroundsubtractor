@@ -28,11 +28,16 @@ public:
 public slots:
     void changeSettings(int const& index);
     void getFolder();
+    void preview();
 
 private:
     QStringList const algoList = {"grayscale", "chromakey"};
     QString inputFolderPath;
     QString backFolderPath;
+
+    // Background subtractor
+    BackgroundSubtractorCK bgSubCK;
+    BackgroundSubtractorGS bgSubGS;
 
     // Widgets
     QStackedWidget* swSettings;

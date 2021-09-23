@@ -60,5 +60,9 @@ std::vector<cv::Mat> ImgProcAlgo::getConvertedImages(){
      return convertedImages;
 }
 
+void ImgProcAlgo::clearAllImages(){
+    imagesToProc.clear();
+    convertedImages.clear();
+}
 
 

@@ -10,10 +10,9 @@ public:
     explicit BackgroundSubtractor(std::string const& imagePath);
     explicit BackgroundSubtractor(std::vector<std::string> const& imagePathList);
 
-    void process() = 0;
-
+    void setThreshold(int const& value);
 protected:
-    int threshold;
+    int threshold = 127;
 };
 
 #endif // BACKGROUNDSUBTRACTOR_H

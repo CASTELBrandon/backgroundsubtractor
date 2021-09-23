@@ -224,3 +224,6 @@ void MainWindow::getFolder(){
     }
 }
 
+void MainWindow::preview(){
+    //
+}

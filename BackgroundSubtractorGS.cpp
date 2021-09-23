@@ -21,6 +21,10 @@ BackgroundSubtractorGS::BackgroundSubtractorGS(std::vector<std::string> const& i
     backgroundSequence = p_backImagePathList;
 }
 
+void BackgroundSubtractorGS::setBackImgNumber(const int &value){
+    backImgNumber = value;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 PixelRGB BackgroundSubtractorGS::pixelDiffRgb2Gray(PixelRGB const& pixelA, PixelRGB const& pixelB, int const& threshold){
@@ -130,4 +134,9 @@ void BackgroundSubtractorGS::addBackgroundImage(const std::string& imagePath){
 
 bool BackgroundSubtractorGS::isBackSequenceEmpty(){
     return backgroundSequence.empty();
+}
+
+void BackgroundSubtractorGS::clearAllImages(){
+    ImgProcAlgo::clearAllImages();
+    backgroundSequence.clear();
 }

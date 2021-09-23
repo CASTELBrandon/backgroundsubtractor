@@ -6,9 +6,14 @@
 class BackgroundSubtractorCK : public BackgroundSubtractor
 {
 public:
+    explicit BackgroundSubtractorCK() = default;
     explicit BackgroundSubtractorCK(PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);
     explicit BackgroundSubtractorCK(std::string const& imagePath, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);
     explicit BackgroundSubtractorCK(std::vector<std::string> const& imagePathList, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);
+
+    // Init methods
+    void setDarkBackPixel(PixelRGB const& pixel);
+    void setLightBackPixel(PixelRGB const& pixel);
 
     // Image processing methods
     static int calculateRangeDiff(int const& pixelValue, int const& min, int const& max);

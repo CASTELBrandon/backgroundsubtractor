@@ -23,6 +23,14 @@ BackgroundSubtractorCK::BackgroundSubtractorCK(std::vector<std::string> const& i
     threshold = p_threshold;
 }
 
+void BackgroundSubtractorCK::setDarkBackPixel(const PixelRGB &pixel){
+    darkBackPixel = pixel;
+}
+
+void BackgroundSubtractorCK::setLightBackPixel(const PixelRGB &pixel){
+    lightBackPixel = pixel;
+}
+
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
 int BackgroundSubtractorCK::calculateRangeDiff(int const& pixelValue, int const& min, int const& max){
