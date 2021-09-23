@@ -23,9 +23,11 @@ public:
 
     // Methods to manage image pathes
     void addImageToTreat(std::string const& imagePath);
-    bool isImgSequenceEmpty();
+    void addImagesToTreat(std::vector<std::string> const& imagePathList);
+    void replaceImagesToTreat(std::vector<std::string> const& imagePathList);
+    bool isImgSequenceEmpty() const;
     std::vector<cv::Mat> getConvertedImages();
-    void showConvertedImages(std::string const& windowName = "Converted images");
+    void showConvertedImage(size_t const& imageNumber, std::string const& windowName = "Converted image");
     inline void clearImagesToConvert() {imagesToProc.clear();};
     inline void clearConvertedImages() {convertedImages.clear();};
     virtual void clearAllImages();

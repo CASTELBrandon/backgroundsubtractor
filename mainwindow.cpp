@@ -4,6 +4,18 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     /**************************************
+     *      PARAMETERS INITILIZATION      *
+     **************************************/
+
+    inputFolderPath = "";
+    backFolderPath = "";
+    algo = AlgorithmBackSub::GRAYSCALE;
+    threshold = 0;
+    backNum = 1;
+    darkPixel = {0,0,0};
+    lightPixel = {0,0,0};
+
+    /**************************************
      *              WINDOW                *
      **************************************/
     setFixedSize(1280,720);
@@ -51,34 +63,36 @@ MainWindow::MainWindow(QWidget *parent)
     QLabel* lbackNum = new QLabel("Background number : ");
 
     ////////////////// QSPINBOX //////////////////
-    QSpinBox* sbThreshold = new QSpinBox;
+    sbThreshold = new QSpinBox;
+    sbThreshold->setMaximum(255);
 
     // Chromakey settings
     // Dark pixel RGB
-    QSpinBox* sbDPR = new QSpinBox;
-    QSpinBox* sbDPG = new QSpinBox;
-    QSpinBox* sbDPB = new QSpinBox;
+    sbDPR = new QSpinBox;
+    sbDPG = new QSpinBox;
+    sbDPB = new QSpinBox;
 
     // Light pixel RGB
-    QSpinBox* sbLPR = new QSpinBox;
-    QSpinBox* sbLPG = new QSpinBox;
-    QSpinBox* sbLPB = new QSpinBox;
+    sbLPR = new QSpinBox;
+    sbLPG = new QSpinBox;
+    sbLPB = new QSpinBox;
 
     // Set parameters on all the spinboxes
-    std::array<QSpinBox*, 7> sbList = {sbThreshold, sbDPR, sbDPG, sbDPB, sbLPR, sbLPG, sbLPB};
+    std::array<QSpinBox*, 6> sbList = {sbDPR, sbDPG, sbDPB, sbLPR, sbLPG, sbLPB};
     for(QSpinBox* const sb : sbList){
+        sb->setMinimum(1);
         sb->setMaximum(255);
     }
 
     // Grayscale settings
-    QSpinBox* sbBackNum = new QSpinBox;
-    sbBackNum->setMinimum(1);
+    sbBackNum = new QSpinBox;
+    sbBackNum->setMinimum(backNum);
 
     ////////////////// QCOMBOBOX //////////////////
     cbImageList = new QComboBox;
     cbImageList->setDisabled(true);
 
-    QComboBox* cbAlgo = new QComboBox;
+    cbAlgo = new QComboBox;
     cbAlgo->addItems(algoList);
 
     ////////////////// QLINEEDITS //////////////////
@@ -91,14 +105,14 @@ MainWindow::MainWindow(QWidget *parent)
     ////////////////// QPUSHBUTTON //////////////////
     bInput = new QPushButton("Browse");
 
-    QPushButton* bNextImage = new QPushButton(">");
+    bNextImage = new QPushButton(">");
     bNextImage->setDisabled(true);
-    QPushButton* bPrevImage = new QPushButton("<");
+    bPrevImage = new QPushButton("<");
     bPrevImage->setDisabled(true);
 
     //QPushButton* bBackFolder = new QPushButton("Browse");
-    QPushButton* bPreview = new QPushButton("Preview");
-    QPushButton* bProcess = new QPushButton("Process");
+    bPreview = new QPushButton("Preview");
+    bProcess = new QPushButton("Process");
 
     // Grayscale settings
     bBackFolder = new QPushButton("Browse");
@@ -199,6 +213,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(cbAlgo, SIGNAL(currentIndexChanged(int)), this, SLOT(changeSettings(int)));
     connect(bInput, SIGNAL(clicked()), this, SLOT(getFolder()));
     connect(bBackFolder, SIGNAL(clicked()), this, SLOT(getFolder()));
+    connect(bPreview, SIGNAL(clicked()), this, SLOT(switcher()));
+    connect(bProcess, SIGNAL(clicked()), this, SLOT(switcher()));
 }
 
 MainWindow::~MainWindow()
@@ -207,6 +223,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::changeSettings(int const& index){
     swSettings->setCurrentIndex(index);
+}
+
+void MainWindow::setDisabledImgWidgets(bool const& value){
+    cbImageList->setDisabled(value);
+    bPrevImage->setDisabled(value);
+    bNextImage->setDisabled(value);
 }
 
 void MainWindow::getFolder(){
@@ -224,6 +246,101 @@ void MainWindow::getFolder(){
     }
 }
 
+std::map<QString, std::vector<std::string> > MainWindow::collectCamImgPaths(const QString &sequenceFolder){
+    // Init the map
+    std::map<QString, std::vector<std::string>> camImgList;
+
+    // Loop through all cam folder to find each image of the sequence
+    QDirIterator itFold(sequenceFolder, {"cam*"}, QDir::Dirs | QDir::NoDotAndDotDot);
+    while(itFold.hasNext()){
+        QDir curDir(itFold.next());
+
+        // Get all images in the camera folder
+        QFileInfoList sequence = curDir.entryInfoList(QStringList() << "*.png" << "*.PNG", QDir::Files);
+        std::vector<std::string> imgList;
+        for(QFileInfo const& fi : sequence){
+            imgList.push_back(fi.filePath().toStdString());
+        }
+        camImgList[curDir.dirName()] = imgList;
+    }
+
+    return camImgList;
+}
+
+void MainWindow::switcher(){
+    // Show message box to alert the user that this method will reset all images
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning", "This will reset all images. Are you sure ?", QMessageBox::Yes | QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        // Reset images widgets
+        cbImageList->clear();
+        setDisabledImgWidgets(true);
+
+        // Collect global parameters
+        inputFolderPath = leInputFolder->text();
+        algo = cbAlgo->currentIndex();
+        threshold = sbThreshold->value();
+
+        // Collect all camera images
+        subjectImgList = collectCamImgPaths(inputFolderPath);
+
+        // Check which algorithm has been chosen
+        if(algo == AlgorithmBackSub::GRAYSCALE){
+            // Collect all parameters for the grayscale
+            backFolderPath = leBackFolder->text();
+            backNum = sbBackNum->value();
+
+            // Collect all background images
+            backImgList = collectCamImgPaths(backFolderPath);
+        }
+        else if(algo == AlgorithmBackSub::CHROMAKEY){
+            darkPixel = {sbDPR->value(), sbDPG->value(), sbDPB->value()};
+            lightPixel = {sbLPR->value(), sbLPG->value(), sbLPB->value()};
+        }
+
+        // Check which is the sender widget
+        QObject* obj = sender();
+        if(obj == bPreview){
+            preview();
+        }
+        else if(obj == bProcess){
+            process();
+        }
+    }
+
+}
+
 void MainWindow::preview(){
-    //
+    // Take the first image to process within input folder
+    std::string imgPath = subjectImgList.begin()->second[0];
+
+    // Check the selected algorithm
+    if(algo == AlgorithmBackSub::GRAYSCALE){
+        // Get the background images from the first folder
+        std::vector<std::string> backImgPaths = backImgList.begin()->second;
+
+        // Prepare the BackgroundSubtractor
+
+        qDebug() << threshold;
+        bgSubGS.clearAllImages();
+        bgSubGS.addImageToTreat(imgPath);
+        bgSubGS.replaceBackgroundImages(backImgPaths);
+        bgSubGS.setThreshold(threshold);
+        bgSubGS.setBackImgNumber(backNum);
+        bgSubGS.process();
+        bgSubGS.showConvertedImage(0);
+    }
+    else if(algo == AlgorithmBackSub::CHROMAKEY){
+        // Prepare the BackgroundSubtractor
+        bgSubCK.clearAllImages();
+        bgSubCK.addImageToTreat(imgPath);
+        bgSubCK.setThreshold(threshold);
+        bgSubCK.setDarkBackPixel(darkPixel);
+        bgSubCK.setLightBackPixel(lightPixel);
+        bgSubCK.process();
+        bgSubCK.showConvertedImage(0);
+    }
+}
+
+void MainWindow::process(){
+
 }

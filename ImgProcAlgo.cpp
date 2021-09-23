@@ -33,9 +33,14 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     return grayImg;
 }
 
-void ImgProcAlgo::showConvertedImages(std::string const& windowName){
-    for(cv::Mat const& img : convertedImages){
+void ImgProcAlgo::showConvertedImage(size_t const& imageNumber, std::string const& windowName){
+    if(imageNumber < convertedImages.size()){
+        cv::Mat img;
+        cv::resize(convertedImages[imageNumber], img, cv::Size(convertedImages[imageNumber].cols/2, convertedImages[imageNumber].rows/2));
         cv::imshow(windowName, img);
+    }
+    else{
+        throw std::out_of_range("Can not access the image of the selected number.");
     }
 }
 
@@ -52,7 +57,17 @@ void ImgProcAlgo::addImageToTreat(std::string const& imagePath){
     imagesToProc.push_back(imagePath);
 }
 
-bool ImgProcAlgo::isImgSequenceEmpty(){
+void ImgProcAlgo::addImagesToTreat(const std::vector<std::string> &imagePathList){
+    // Reserve rellocate the vector storage
+    imagesToProc.reserve(imagesToProc.size() + std::distance(imagePathList.begin(), imagePathList.end()));
+    imagesToProc.insert(imagesToProc.end(), imagePathList.begin(), imagePathList.end());
+}
+
+void ImgProcAlgo::replaceImagesToTreat(const std::vector<std::string> &imagePathList){
+    imagesToProc = imagePathList;
+}
+
+bool ImgProcAlgo::isImgSequenceEmpty() const{
     return imagesToProc.empty();
 }
 

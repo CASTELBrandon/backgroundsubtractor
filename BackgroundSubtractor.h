@@ -3,6 +3,8 @@
 
 #include "ImgProcAlgo.h"
 
+enum AlgorithmBackSub {GRAYSCALE, CHROMAKEY};
+
 class BackgroundSubtractor : public ImgProcAlgo
 {
 public:
@@ -11,8 +13,9 @@ public:
     explicit BackgroundSubtractor(std::vector<std::string> const& imagePathList);
 
     void setThreshold(int const& value);
+
 protected:
-    int threshold = 127;
+    int threshold;
 };
 
 #endif // BACKGROUNDSUBTRACTOR_H

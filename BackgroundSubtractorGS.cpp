@@ -111,7 +111,7 @@ void BackgroundSubtractorGS::process(){
     }
 
     // Read the selected background image
-    cv::Mat backgImg = cv::imread(backgroundSequence[backImgNumber]);
+    cv::Mat backgImg = cv::imread(backgroundSequence[backImgNumber-1]);
 
     // Loop for each image to process
     for(std::string const& imgPath : imagesToProc){
@@ -130,6 +130,16 @@ void BackgroundSubtractorGS::process(){
 
 void BackgroundSubtractorGS::addBackgroundImage(const std::string& imagePath){
     backgroundSequence.push_back(imagePath);
+}
+
+void BackgroundSubtractorGS::addBackgroundImages(const std::vector<std::string> &imagePathList){
+    // Reserve rellocate the vector storage
+    backgroundSequence.reserve(backgroundSequence.size() + std::distance(imagePathList.begin(), imagePathList.end()));
+    backgroundSequence.insert(backgroundSequence.end(), imagePathList.begin(), imagePathList.end());
+}
+
+void BackgroundSubtractorGS::replaceBackgroundImages(const std::vector<std::string> &imagePathList){
+    backgroundSequence = imagePathList;
 }
 
 bool BackgroundSubtractorGS::isBackSequenceEmpty(){

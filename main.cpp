@@ -1,9 +1,6 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDebug>
-#include <QDir>
-#include <QStringList>
-#include <QDirIterator>
 
 #include <vector>
 #include <string>
@@ -130,7 +127,7 @@ int main(int argc, char *argv[])
             ////////// GRAYSCALE ALGORITHM //////////
             if(algo == "grayscale"){
                 // Get the rest of the parameters
-                int backNum = parser.value(backgroundNumOption).toInt() - 1;
+                int backNum = parser.value(backgroundNumOption).toInt();
                 QString backFolder = parser.value(backgroundPathOption);
 
                 // Get background file pathes

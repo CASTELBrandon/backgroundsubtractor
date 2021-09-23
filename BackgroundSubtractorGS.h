@@ -21,6 +21,8 @@ public:
 
     // Methods to manage image pathes
     void addBackgroundImage(const std::string& imagePath);
+    void addBackgroundImages(std::vector<std::string> const& imagePathList);
+    void replaceBackgroundImages(std::vector<std::string> const& imagePathList);
     bool isBackSequenceEmpty();
     void clearAllImages() override;
 
