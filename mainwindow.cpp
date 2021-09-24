@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     inputFolderPath = "";
     backFolderPath = "";
-    algo = AlgorithmBackSub::GRAYSCALE;
+    algo = Processing::Algorithms::GRAYSCALE;
     threshold = 0;
     backNum = 1;
     darkPixel = {0,0,0};
@@ -402,7 +402,7 @@ void MainWindow::switcher(){
         subjectImgList = collectCamImgPaths(inputFolderPath);
 
         // Check which algorithm has been chosen
-        if(algo == AlgorithmBackSub::GRAYSCALE){
+        if(algo == Processing::Algorithms::GRAYSCALE){
             // Collect all parameters for the grayscale
             backFolderPath = leBackFolder->text();
             backNum = sbBackNum->value();
@@ -410,7 +410,7 @@ void MainWindow::switcher(){
             // Collect all background images
             backImgList = collectCamImgPaths(backFolderPath);
         }
-        else if(algo == AlgorithmBackSub::CHROMAKEY){
+        else if(algo == Processing::Algorithms::CHROMAKEY){
             darkPixel = {sbDPR->value(), sbDPG->value(), sbDPB->value()};
             lightPixel = {sbLPR->value(), sbLPG->value(), sbLPB->value()};
         }
@@ -432,7 +432,7 @@ void MainWindow::preview(){
     std::string imgPath = subjectImgList.begin()->second[0];
 
     // Check the selected algorithm
-    if(algo == AlgorithmBackSub::GRAYSCALE){
+    if(algo == Processing::Algorithms::GRAYSCALE){
         // Get the background images from the first folder
         std::vector<std::string> backImgPaths = backImgList.begin()->second;
 
@@ -445,7 +445,7 @@ void MainWindow::preview(){
         bgSubGS.process();
         bgSubGS.showConvertedImage(0);
     }
-    else if(algo == AlgorithmBackSub::CHROMAKEY){
+    else if(algo == Processing::Algorithms::CHROMAKEY){
         // Prepare the BackgroundSubtractor
         bgSubCK.clearAllImages();
         bgSubCK.addImageToTreat(imgPath);
@@ -478,7 +478,7 @@ void MainWindow::process(){
         }
 
         // Check the selected algorithm
-        if(algo == AlgorithmBackSub::GRAYSCALE){
+        if(algo == Processing::Algorithms::GRAYSCALE){
             // Get the background images from the first folder
             std::vector<std::string> backImgPaths = backImgList[itCam.first];
 
@@ -493,7 +493,7 @@ void MainWindow::process(){
             // Get converted images
             convertedImages[itCam.first] = bgSubGS.getConvertedImages();
         }
-        else if(algo == AlgorithmBackSub::CHROMAKEY){
+        else if(algo == Processing::Algorithms::CHROMAKEY){
             // Prepare the BackgroundSubtractor
             bgSubCK.clearAllImages();
             bgSubCK.addImagesToTreat(imgPaths);

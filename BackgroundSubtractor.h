@@ -3,7 +3,14 @@
 
 #include "ImgProcAlgo.h"
 
-enum AlgorithmBackSub {GRAYSCALE, CHROMAKEY};
+namespace Processing {
+    enum Algorithms {GRAYSCALE, CHROMAKEY};
+    enum ImageFlags {MASK, RGB};
+}
+
+namespace Writing {
+    enum ImageFlags {MASK, RGB, BOTH};
+}
 
 class BackgroundSubtractor : public ImgProcAlgo
 {
@@ -13,6 +20,7 @@ public:
     explicit BackgroundSubtractor(std::vector<std::string> const& imagePathList);
 
     void setThreshold(int const& value);
+    void saveImages(std::string const& outputPath, Writing::ImageFlags const& flag = Writing::ImageFlags::BOTH);
 
 protected:
     int threshold;

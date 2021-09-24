@@ -11,3 +11,6 @@ BackgroundSubtractor::BackgroundSubtractor(std::vector<std::string> const& image
 void BackgroundSubtractor::setThreshold(const int &value){
     threshold = value;
 }
+
+void BackgroundSubtractor::saveImages(const std::string &outputPath, Writing::ImageFlags const& flag){
+}
