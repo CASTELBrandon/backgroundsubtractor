@@ -215,6 +215,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(bBackFolder, SIGNAL(clicked()), this, SLOT(getFolder()));
     connect(bPreview, SIGNAL(clicked()), this, SLOT(switcher()));
     connect(bProcess, SIGNAL(clicked()), this, SLOT(switcher()));
+    connect(bPrevImage, SIGNAL(clicked()), this, SLOT(previousImage()));
+    connect(bNextImage, SIGNAL(clicked()), this, SLOT(nextImage()));
+    connect(cbImageList, SIGNAL(currentTextChanged(QString)), this, SLOT(changeImages(QString)));
 }
 
 MainWindow::~MainWindow()
@@ -231,6 +234,108 @@ void MainWindow::setDisabledImgWidgets(bool const& value){
     bNextImage->setDisabled(value);
 }
 
+void MainWindow::nextImage(){
+    int index = cbImageList->currentIndex()+1;
+    if(index < cbImageList->count()){
+        cbImageList->setCurrentIndex(index);
+    }
+}
+
+void MainWindow::previousImage(){
+    int index = cbImageList->currentIndex()-1;
+    if(index >= 0){
+        cbImageList->setCurrentIndex(index);
+    }
+}
+
+void MainWindow::changeImages(QString const& text){
+    /*
+     * This slot will seek the image in argument for each camera and display it in the viewer
+     */
+    // Seek the index of the value
+
+    if(!convertedImages.empty()){
+        auto imgList = subjectImgList.begin()->second;
+        for(size_t i = 0; i < imgList.size(); i++){
+            QFileInfo infFile(QString::fromStdString(imgList[i]));
+            if(infFile.baseName() == text){
+                showImage(i);
+                break;
+            }
+        }
+    }
+}
+
+void MainWindow::showImage(size_t const& imgValue){
+    /*
+     * This method show the selected image, for each camera, in the viewer
+     */
+
+    // Clean the viewer
+    cleanViewer();
+
+    // Check the image value
+    if(imgValue < convertedImages.begin()->second.size()){
+        int row = 0;
+        int col = 0;
+        int imgColsRed = 0;
+        int imgRowsRed = 0;
+        qDebug() << "Creation of the cam views...";
+        for (auto const& itCam : convertedImages){
+            qDebug() << "Placement of the camera " << itCam.first;
+
+            // Get the selected image
+            cv::Mat firstImg = itCam.second[imgValue];
+
+            // Resize the image
+            cv::Mat imgToShow;
+            imgColsRed = firstImg.cols/10;
+            imgRowsRed = firstImg.rows/10;
+            cv::resize(firstImg, imgToShow, cv::Size(firstImg.cols/10, firstImg.rows/10));
+
+            // Create the camViewer widget
+            QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgToShow.data, imgToShow.cols, imgToShow.rows, QImage::Format_RGB888));
+            CamViewer* camView = new CamViewer(itCam.first, imgMap);
+            camView->setMaximumSize(imgToShow.cols, imgToShow.rows);
+            gridViewer->addWidget(camView,row,col,1,1);
+
+            // Check grid
+            if(col >= 3 && row <= 2){
+                col = 0;
+                row++;
+            }
+            else{
+                col++;
+            }
+        }
+
+        // Add a spacer to complete the columns of the grid
+        qDebug() << "Grid adjustment...";
+        if(col < 3 ){
+            QSpacerItem *spacerh = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
+            gridViewer->addItem(spacerh,row,col,1,4-col);
+        }
+
+        // Add a spacer to complete the rows of the grid
+        if(row < 2){
+            QSpacerItem * spacerv = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
+            gridViewer->addItem(spacerv,row+1,0,2-row,1);
+        }
+    }
+
+}
+
+void MainWindow::cleanViewer(){
+    /*
+     * Clean all the camViews in the viewer
+     */
+    QLayoutItem* child;
+    while((child = gridViewer->takeAt(0)) != nullptr){
+        delete child->widget();
+        delete child;
+    }
+}
+
 void MainWindow::getFolder(){
     // Create sender object to know which widget called this slot
     QObject* obj = sender();
@@ -245,6 +350,8 @@ void MainWindow::getFolder(){
         leBackFolder->setText(backFolderPath);
     }
 }
+
+//////////// PROCESSING METHODS AND SLOTS ////////////
 
 std::map<QString, std::vector<std::string> > MainWindow::collectCamImgPaths(const QString &sequenceFolder){
     // Init the map
@@ -265,17 +372,6 @@ std::map<QString, std::vector<std::string> > MainWindow::collectCamImgPaths(cons
     }
 
     return camImgList;
-}
-
-void MainWindow::cleanViewer(){
-    /*
-     * Clean all the camViews in the viewer
-     */
-    QLayoutItem* child;
-    while((child = gridViewer->takeAt(0)) != nullptr){
-        delete child->widget();
-        delete child;
-    }
 }
 
 void MainWindow::switcher(){
@@ -360,8 +456,14 @@ void MainWindow::process(){
 
         // Get image paths
         std::vector<std::string> imgPaths;
-        for(int i = 0; i < 2; i++){
-            qDebug() << "Image to convert : " << QString::fromStdString(itCam.second[i]);
+        for(int i = 0; i < 4; i++){
+            QFileInfo infFile(QString::fromStdString(itCam.second[i]));
+            qDebug() << "Image to convert : " << infFile.filePath();
+
+            // Add the image name in the image combobox
+            if(cbImageList->findText(infFile.baseName()) == -1){
+                cbImageList->addItem(infFile.baseName());
+            }
             imgPaths.push_back(itCam.second[i]);
         }
 
@@ -395,57 +497,16 @@ void MainWindow::process(){
         }
     }
 
-    // Display images
-    int row = 0;
-    int col = 0;
-    int imgColsRed = 0;
-    int imgRowsRed = 0;
-    qDebug() << "Creation of the cam views...";
-    for (auto const& itCam : convertedImages){
-        qDebug() << "Placement of the camera " << itCam.first;
-        qDebug() << "col : " << col;
-        qDebug() << "row : " << row;
+    // Show the first image of each camera
+    showImage(0);
 
-        // Get the first image of each camera
-        cv::Mat firstImg = itCam.second[0];
+    // Set enable the widgets
+    setDisabledImgWidgets(false);
 
-        // Resize the image
-        cv::Mat imgToShow;
-        imgColsRed = firstImg.cols/10;
-        imgRowsRed = firstImg.rows/10;
-        cv::resize(firstImg, imgToShow, cv::Size(firstImg.cols/10, firstImg.rows/10));
-
-        // Create the camViewer widget
-        QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgToShow.data, imgToShow.cols, imgToShow.rows, QImage::Format_RGB888));
-        CamViewer* camView = new CamViewer(itCam.first, imgMap);
-        camView->setMaximumSize(imgToShow.cols, imgToShow.rows);
-        gridViewer->addWidget(camView,row,col,1,1);
-
-        // Check grid
-        if(col >= 3 && row <= 2){
-            col = 0;
-            row++;
-        }
-        else{
-            col++;
-        }
-    }
-
-    // Add a spacer to complete the columns of the grid
-    qDebug() << "Grid adjustment...";
-    qDebug() << "col : " << col;
-    qDebug() << "row : " << row;
-    if(col < 3 ){
-        QSpacerItem *spacerh = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
-        gridViewer->addItem(spacerh,row,col,1,4-col);
-    }
-
-    // Add a spacer to complete the rows of the grid
-    if(row < 2){
-        QSpacerItem * spacerv = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
-        gridViewer->addItem(spacerv,row+1,0,2-row,1);
-    }
+    qDebug() << "Processing done !";
 }
+
+
 
 ///////////////////////////////////////////////// CAMVIEWER /////////////////////////////////////////////////
 

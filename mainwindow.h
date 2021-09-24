@@ -41,12 +41,16 @@ public slots:
     void getFolder();
     void switcher();
     void cleanViewer();
+    void nextImage();
+    void previousImage();
+    void changeImages(QString const& text);
 
 private:
     /////// METHODS ///////
     void process();
     void preview();
     void setDisabledImgWidgets(bool const& value);
+    void showImage(size_t const& imgNum);
 
     /////// ATTRIBUTES ///////
     QStringList const algoList = {"grayscale", "chromakey"};
