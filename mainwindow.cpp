@@ -263,6 +263,9 @@ void MainWindow::changeImages(QString const& text){
                 break;
             }
         }
+        QString msg = QString("Index of the image %1 was not found.").arg(text);
+        qCritical() << msg;
+        QMessageBox::critical(this, "Error", msg);
     }
 }
 
@@ -321,6 +324,9 @@ void MainWindow::showImage(size_t const& imgValue){
             QSpacerItem * spacerv = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
             gridViewer->addItem(spacerv,row+1,0,2-row,1);
         }
+    }
+    else{
+        QMessageBox::critical(this, "Error", QString("Unable to find the image number %1.").arg(imgValue));
     }
 
 }
