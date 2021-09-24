@@ -368,7 +368,7 @@ void MainWindow::process(){
         // Check the selected algorithm
         if(algo == AlgorithmBackSub::GRAYSCALE){
             // Get the background images from the first folder
-            std::vector<std::string> backImgPaths = backImgList.begin()->second;
+            std::vector<std::string> backImgPaths = backImgList[itCam.first];
 
             // Prepare the BackgroundSubtractor
             bgSubGS.clearAllImages();
