@@ -6,7 +6,7 @@
 class BackgroundSubtractorCK : public BackgroundSubtractor
 {
 public:
-    explicit BackgroundSubtractorCK() = default;
+    explicit BackgroundSubtractorCK(Processing::ImageFlags const& flags = Processing::ImageFlags::RGB);
     explicit BackgroundSubtractorCK(PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);
     explicit BackgroundSubtractorCK(std::string const& imagePath, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);
     explicit BackgroundSubtractorCK(std::vector<std::string> const& imagePathList, PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold);

@@ -1,5 +1,9 @@
 #include "BackgroundSubtractorCK.h"
 
+BackgroundSubtractorCK::BackgroundSubtractorCK(Processing::ImageFlags const& flags)
+    : BackgroundSubtractor(flags)
+{}
+
 BackgroundSubtractorCK::BackgroundSubtractorCK(PixelRGB const& p_darkBackPixel, PixelRGB const& p_lightBackPixel, int const& p_threshold)
 {
     darkBackPixel = p_darkBackPixel;
@@ -115,11 +119,20 @@ void BackgroundSubtractorCK::process(){
     for(std::string const& imgPath : imagesToProc){
         // Initialize the images
         cv::Mat subjectImg = cv::imread(imgPath);
+        originalImages.push_back(subjectImg);
 
         // Check if we managed to read the image before continuing
         if(!subjectImg.empty()){
             cv::Mat imgMask = imgMaskCalculation(subjectImg, darkBackPixel, lightBackPixel, threshold);
-            convertedImages.push_back(imgMask);
+            maskImages.push_back(imgMask);
+
+            // Check the flag of processing
+            if(imgFlag == Processing::ImageFlags::RGB){
+                convertedImages.push_back(applyMask(subjectImg, imgMask));
+            }
+            else if(imgFlag == Processing::ImageFlags::MASK){
+                convertedImages.push_back(imgMask);
+            }
         }
     }
 }

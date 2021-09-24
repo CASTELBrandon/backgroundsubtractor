@@ -6,7 +6,7 @@
 class BackgroundSubtractorGS : public BackgroundSubtractor
 {
 public:
-    explicit BackgroundSubtractorGS() = default;
+    explicit BackgroundSubtractorGS(Processing::ImageFlags const& flags = Processing::ImageFlags::RGB);
     explicit BackgroundSubtractorGS(int const& p_threshold, int const& p_backImgNumber);
     explicit BackgroundSubtractorGS(std::string const& p_imagePath, std::string const& p_backImagePath, int const& p_threshold, int const& p_backImgNumber);
     explicit BackgroundSubtractorGS(std::vector<std::string> const& p_imagePathList, std::vector<std::string> const& p_backImagePathList, int const& p_threshold, int const& p_backImgNumber);

@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <map>
 
 #include "PixelRGB.h"
 
@@ -38,6 +39,7 @@ public:
 protected:
     std::vector<std::string> imagesToProc;
     std::vector<cv::Mat> convertedImages;
+    std::vector<cv::Mat> originalImages;
 };
 
 #endif // IMGPROCALGO_H

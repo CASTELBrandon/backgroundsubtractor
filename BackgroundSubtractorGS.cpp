@@ -1,5 +1,9 @@
 #include "BackgroundSubtractorGS.h"
 
+BackgroundSubtractorGS::BackgroundSubtractorGS(Processing::ImageFlags const& flags)
+    : BackgroundSubtractor(flags)
+{}
+
 BackgroundSubtractorGS::BackgroundSubtractorGS(int const& p_threshold, int const& p_backImgNumber){
     threshold = p_threshold;
     backImgNumber = p_backImgNumber;
@@ -54,7 +58,7 @@ cv::Mat BackgroundSubtractorGS::imgMaskCalculation(cv::Mat const& imageA, cv::Ma
 
     // Check if the two images have the same size. To simplify the calculations, we will only process images of the same size.
     if(imageA.cols != imageB.cols || imageA.rows != imageB.rows){
-         throw std::length_error("The two images must have the same size.");
+         throw std::invalid_argument("The two images must have the same size.");
     }
 
     // Check if the two images have the same type.
@@ -117,11 +121,20 @@ void BackgroundSubtractorGS::process(){
     for(std::string const& imgPath : imagesToProc){
         // Initialize the images
         cv::Mat subjectImg = cv::imread(imgPath);
+        originalImages.push_back(subjectImg);
 
         // Check if we managed to read the image before continuing
         if(!subjectImg.empty()){
             cv::Mat imgMask = imgMaskCalculation(subjectImg, backgImg, threshold);
-            convertedImages.push_back(imgMask);
+            maskImages.push_back(imgMask);
+
+            // Check the flag of processing
+            if(imgFlag == Processing::ImageFlags::RGB){
+                convertedImages.push_back(applyMask(subjectImg, imgMask));
+            }
+            else if(imgFlag == Processing::ImageFlags::MASK){
+                convertedImages.push_back(imgMask);
+            }
         }
     }
 }
@@ -147,6 +160,6 @@ bool BackgroundSubtractorGS::isBackSequenceEmpty(){
 }
 
 void BackgroundSubtractorGS::clearAllImages(){
-    ImgProcAlgo::clearAllImages();
+    BackgroundSubtractor::clearAllImages();
     backgroundSequence.clear();
 }
