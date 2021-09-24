@@ -267,6 +267,17 @@ std::map<QString, std::vector<std::string> > MainWindow::collectCamImgPaths(cons
     return camImgList;
 }
 
+void MainWindow::cleanViewer(){
+    /*
+     * Clean all the camViews in the viewer
+     */
+    QLayoutItem* child;
+    while((child = gridViewer->takeAt(0)) != nullptr){
+        delete child->widget();
+        delete child;
+    }
+}
+
 void MainWindow::switcher(){
     // Show message box to alert the user that this method will reset all images
     QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning", "This will reset all images. Are you sure ?", QMessageBox::Yes | QMessageBox::No);
@@ -274,6 +285,7 @@ void MainWindow::switcher(){
         // Reset images widgets
         cbImageList->clear();
         setDisabledImgWidgets(true);
+        cleanViewer();
 
         // Collect global parameters
         inputFolderPath = leInputFolder->text();
@@ -340,67 +352,99 @@ void MainWindow::preview(){
 }
 
 void MainWindow::process(){
-    // Get image path
-    //std::string imgPath = subjectImgList.begin()->second[];
-    std::vector<std::string> imageList;
-    for(int j=0; j < 4; j++){
-        imageList.push_back(subjectImgList.begin()->second[j]);
-    }
+    // Convert each image in each camera folder
+    qDebug() << "Processing...";
+    convertedImages.clear();
+    for(auto const& itCam : subjectImgList){
+        qDebug() << "Calculation of " << itCam.first;
 
-    // Check the selected algorithm
-    if(algo == AlgorithmBackSub::GRAYSCALE){
-        // Get the background images from the first folder
-        std::vector<std::string> backImgPaths = backImgList.begin()->second;
+        // Get image paths
+        std::vector<std::string> imgPaths;
+        for(int i = 0; i < 2; i++){
+            qDebug() << "Image to convert : " << QString::fromStdString(itCam.second[i]);
+            imgPaths.push_back(itCam.second[i]);
+        }
 
-        // Prepare the BackgroundSubtractor
-        bgSubGS.clearAllImages();
-        bgSubGS.addImagesToTreat(imageList);
-        bgSubGS.replaceBackgroundImages(backImgPaths);
-        bgSubGS.setThreshold(threshold);
-        bgSubGS.setBackImgNumber(backNum);
-        bgSubGS.process();
+        // Check the selected algorithm
+        if(algo == AlgorithmBackSub::GRAYSCALE){
+            // Get the background images from the first folder
+            std::vector<std::string> backImgPaths = backImgList.begin()->second;
 
-        // Get converted images
-        convertedImages = bgSubGS.getConvertedImages();
-    }
-    else if(algo == AlgorithmBackSub::CHROMAKEY){
-        // Prepare the BackgroundSubtractor
-        bgSubCK.clearAllImages();
-        bgSubCK.addImagesToTreat(imageList);
-        bgSubCK.setThreshold(threshold);
-        bgSubCK.setDarkBackPixel(darkPixel);
-        bgSubCK.setLightBackPixel(lightPixel);
-        bgSubCK.process();
+            // Prepare the BackgroundSubtractor
+            bgSubGS.clearAllImages();
+            bgSubGS.addImagesToTreat(imgPaths);
+            bgSubGS.replaceBackgroundImages(backImgPaths);
+            bgSubGS.setThreshold(threshold);
+            bgSubGS.setBackImgNumber(backNum);
+            bgSubGS.process();
 
-        // Get converted images
-        convertedImages = bgSubCK.getConvertedImages();
+            // Get converted images
+            convertedImages[itCam.first] = bgSubGS.getConvertedImages();
+        }
+        else if(algo == AlgorithmBackSub::CHROMAKEY){
+            // Prepare the BackgroundSubtractor
+            bgSubCK.clearAllImages();
+            bgSubCK.addImagesToTreat(imgPaths);
+            bgSubCK.setThreshold(threshold);
+            bgSubCK.setDarkBackPixel(darkPixel);
+            bgSubCK.setLightBackPixel(lightPixel);
+            bgSubCK.process();
+
+            // Get converted images
+            convertedImages[itCam.first] = bgSubCK.getConvertedImages();
+        }
     }
 
     // Display images
     int row = 0;
     int col = 0;
-    int imgCols = convertedImages[0].cols/10;
-    int imgRows = convertedImages[0].rows/10;
-    for(int i=0; i < 4; i++){
-        cv::Mat imgMat;
-        cv::resize(convertedImages[i], imgMat, cv::Size(imgCols, imgRows));
-        QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgMat.data, imgMat.cols, imgMat.rows, QImage::Format_RGB888));
-        CamViewer* camView = new CamViewer(subjectImgList.begin()->first, imgMap);
-        camView->setMaximumSize(imgMat.cols, imgMat.rows);
+    int imgColsRed = 0;
+    int imgRowsRed = 0;
+    qDebug() << "Creation of the cam views...";
+    for (auto const& itCam : convertedImages){
+        qDebug() << "Placement of the camera " << itCam.first;
+        qDebug() << "col : " << col;
+        qDebug() << "row : " << row;
+
+        // Get the first image of each camera
+        cv::Mat firstImg = itCam.second[0];
+
+        // Resize the image
+        cv::Mat imgToShow;
+        imgColsRed = firstImg.cols/10;
+        imgRowsRed = firstImg.rows/10;
+        cv::resize(firstImg, imgToShow, cv::Size(firstImg.cols/10, firstImg.rows/10));
+
+        // Create the camViewer widget
+        QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgToShow.data, imgToShow.cols, imgToShow.rows, QImage::Format_RGB888));
+        CamViewer* camView = new CamViewer(itCam.first, imgMap);
+        camView->setMaximumSize(imgToShow.cols, imgToShow.rows);
         gridViewer->addWidget(camView,row,col,1,1);
-        if(col >= 4){
+
+        // Check grid
+        if(col >= 3 && row <= 2){
             col = 0;
             row++;
-        }else{
+        }
+        else{
             col++;
         }
     }
 
-    /*QSpacerItem* spacerh = new QSpacerItem(viewer->width(), imgRows, QSizePolicy::Expanding, QSizePolicy::Minimum);
-    QSpacerItem* sparcev = new QSpacerItem(imgCols, viewer->height(), QSizePolicy::Minimum, QSizePolicy::Expanding);
-    gridViewer->addItem(spacerh,row,5,1,1);
-    gridViewer->addItem(sparcev,5,col,1,1);*/
+    // Add a spacer to complete the columns of the grid
+    qDebug() << "Grid adjustment...";
+    qDebug() << "col : " << col;
+    qDebug() << "row : " << row;
+    if(col < 3 ){
+        QSpacerItem *spacerh = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
+        gridViewer->addItem(spacerh,row,col,1,4-col);
+    }
 
+    // Add a spacer to complete the rows of the grid
+    if(row < 2){
+        QSpacerItem * spacerv = new QSpacerItem(imgColsRed, imgRowsRed, QSizePolicy::Fixed, QSizePolicy::Fixed);
+        gridViewer->addItem(spacerv,row+1,0,2-row,1);
+    }
 }
 
 ///////////////////////////////////////////////// CAMVIEWER /////////////////////////////////////////////////

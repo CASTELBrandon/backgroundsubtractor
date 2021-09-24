@@ -40,6 +40,7 @@ public slots:
     void changeSettings(int const& index);
     void getFolder();
     void switcher();
+    void cleanViewer();
 
 private:
     /////// METHODS ///////
@@ -51,7 +52,7 @@ private:
     QStringList const algoList = {"grayscale", "chromakey"};
     std::map<QString, std::vector<std::string>> subjectImgList;
     std::map<QString, std::vector<std::string>> backImgList;
-    std::vector<cv::Mat> convertedImages;
+    std::map<QString, std::vector<cv::Mat>> convertedImages;
 
     // Parameters
     QString inputFolderPath;
