@@ -35,9 +35,10 @@ void BackgroundSubtractor::clearAllImages(){
  * @return A matrix with the mask applied on the RGB image.
  */
 cv::Mat BackgroundSubtractor::applyMask(const cv::Mat &RGBImg, const cv::Mat &maskImg){
-    // Check if the two matrices are CV_8UC3
-    CV_Assert(maskImg.depth() == CV_8UC3);
-    CV_Assert(RGBImg.depth() == CV_8UC3);
+    // Check if the two matrices have 3 channels
+    if(RGBImg.channels() != 3 || maskImg.channels() != 3){
+        throw std::invalid_argument("The two images must have 3 channels");
+    }
 
     // Check if the two images have the same size. To simplify the calculations, we will only process images of the same size.
     if(maskImg.cols != RGBImg.cols || maskImg.rows != RGBImg.rows){
@@ -45,7 +46,7 @@ cv::Mat BackgroundSubtractor::applyMask(const cv::Mat &RGBImg, const cv::Mat &ma
     }
 
     // Init the new image
-    cv::Mat newImg;
+    cv::Mat newImg = cv::Mat(maskImg.rows, maskImg.cols, CV_8UC3);
 
     // Analysis
     for(int col=0; col < maskImg.cols; col++){
@@ -53,15 +54,22 @@ cv::Mat BackgroundSubtractor::applyMask(const cv::Mat &RGBImg, const cv::Mat &ma
             // Check the pixel of the mask
             cv::Vec3b intensityMask = maskImg.at<cv::Vec3b>(row, col);
             PixelRGB pixelMask = {intensityMask[2], intensityMask[1],intensityMask[0]};
+            cv::Vec3b intensityNewImg;
             if(pixelMask == 255){
+                cv::Vec3b intensityRGB = RGBImg.at<cv::Vec3b>(row,col);
+
                 // Set the pixel of the RGB image to the new image
-                newImg.at<cv::Vec3b>(row,col) = RGBImg.at<cv::Vec3b>(row,col);
+                intensityNewImg[0] = intensityRGB[2];
+                intensityNewImg[1] = intensityRGB[1];
+                intensityNewImg[2] = intensityRGB[0];
+                newImg.at<cv::Vec3b>(row,col) = intensityNewImg;
             }
             else{
-                // Set a black pixel to the new image;
-                newImg.at<cv::Vec3b>(row,col)[0] = 0;
-                newImg.at<cv::Vec3b>(row,col)[1] = 0;
-                newImg.at<cv::Vec3b>(row,col)[2] = 0;
+                // Set a black pixel to the new image
+                intensityNewImg[0] = 0;
+                intensityNewImg[1] = 0;
+                intensityNewImg[2] = 0;
+                newImg.at<cv::Vec3b>(row,col) = intensityNewImg;
             }
         }
     }

@@ -254,7 +254,7 @@ void MainWindow::changeImages(QString const& text){
      */
     // Seek the index of the value
 
-    if(!convertedImages.empty()){
+    if(!convertedImages.empty() && !text.isEmpty()){
         auto imgList = subjectImgList.begin()->second;
         bool found = false;
         for(size_t i = 0; i < imgList.size(); i++){
