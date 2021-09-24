@@ -18,6 +18,7 @@
 #include <QDirIterator>
 #include <QMessageBox>
 #include <QDebug>
+#include <QSpacerItem>
 
 #include <map>
 
@@ -50,6 +51,7 @@ private:
     QStringList const algoList = {"grayscale", "chromakey"};
     std::map<QString, std::vector<std::string>> subjectImgList;
     std::map<QString, std::vector<std::string>> backImgList;
+    std::vector<cv::Mat> convertedImages;
 
     // Parameters
     QString inputFolderPath;
@@ -84,5 +86,28 @@ private:
     QPushButton* bProcess;
     QPushButton* bNextImage;
     QPushButton* bPrevImage;
+    QWidget* viewer;
+
+    // Layouts
+    QGridLayout* gridViewer;
 };
+
+class CamViewer : public QWidget{
+    Q_OBJECT
+
+public:
+    CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent=nullptr);
+    CamViewer(QWidget* parent=nullptr);
+
+public slots:
+    void setText(QString const& text);
+    void setPixmap(QPixmap const& pixmap);
+
+private:
+    QWidget* win;
+    QLabel* title;
+    QLabel* pixMap;
+    QVBoxLayout* vLayout;
+};
+
 #endif // MAINWINDOW_H

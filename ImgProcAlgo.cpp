@@ -57,13 +57,13 @@ void ImgProcAlgo::addImageToTreat(std::string const& imagePath){
     imagesToProc.push_back(imagePath);
 }
 
-void ImgProcAlgo::addImagesToTreat(const std::vector<std::string> &imagePathList){
+void ImgProcAlgo::addImagesToTreat(std::vector<std::string> const& imagePathList){
     // Reserve rellocate the vector storage
     imagesToProc.reserve(imagesToProc.size() + std::distance(imagePathList.begin(), imagePathList.end()));
     imagesToProc.insert(imagesToProc.end(), imagePathList.begin(), imagePathList.end());
 }
 
-void ImgProcAlgo::replaceImagesToTreat(const std::vector<std::string> &imagePathList){
+void ImgProcAlgo::replaceImagesToTreat(std::vector<std::string> const& imagePathList){
     imagesToProc = imagePathList;
 }
 

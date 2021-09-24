@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget* mainWidget = new QWidget; setCentralWidget(mainWidget);
 
     // View QWidget
-    QWidget* viewer = new QWidget;
+    viewer = new QWidget;
     viewer->setMinimumSize(this->width()/3, this->height()/3);
     QPalette pal = viewer->palette();
     pal.setColor(QPalette::Background, QColor(150,150,150));
@@ -142,8 +142,8 @@ MainWindow::MainWindow(QWidget *parent)
     mainWidget->setLayout(gridMain);
 
     // viewer grid
-    QGridLayout* gridDisp = new QGridLayout;
-    viewer->setLayout(gridDisp);
+    gridViewer = new QGridLayout;
+    viewer->setLayout(gridViewer);
 
     // Settings grayscale
     QGridLayout* gridGSSet = new QGridLayout;
@@ -319,8 +319,6 @@ void MainWindow::preview(){
         std::vector<std::string> backImgPaths = backImgList.begin()->second;
 
         // Prepare the BackgroundSubtractor
-
-        qDebug() << threshold;
         bgSubGS.clearAllImages();
         bgSubGS.addImageToTreat(imgPath);
         bgSubGS.replaceBackgroundImages(backImgPaths);
@@ -342,5 +340,101 @@ void MainWindow::preview(){
 }
 
 void MainWindow::process(){
+    // Get image path
+    //std::string imgPath = subjectImgList.begin()->second[];
+    std::vector<std::string> imageList;
+    for(int j=0; j < 4; j++){
+        imageList.push_back(subjectImgList.begin()->second[j]);
+    }
 
+    // Check the selected algorithm
+    if(algo == AlgorithmBackSub::GRAYSCALE){
+        // Get the background images from the first folder
+        std::vector<std::string> backImgPaths = backImgList.begin()->second;
+
+        // Prepare the BackgroundSubtractor
+        bgSubGS.clearAllImages();
+        bgSubGS.addImagesToTreat(imageList);
+        bgSubGS.replaceBackgroundImages(backImgPaths);
+        bgSubGS.setThreshold(threshold);
+        bgSubGS.setBackImgNumber(backNum);
+        bgSubGS.process();
+
+        // Get converted images
+        convertedImages = bgSubGS.getConvertedImages();
+    }
+    else if(algo == AlgorithmBackSub::CHROMAKEY){
+        // Prepare the BackgroundSubtractor
+        bgSubCK.clearAllImages();
+        bgSubCK.addImagesToTreat(imageList);
+        bgSubCK.setThreshold(threshold);
+        bgSubCK.setDarkBackPixel(darkPixel);
+        bgSubCK.setLightBackPixel(lightPixel);
+        bgSubCK.process();
+
+        // Get converted images
+        convertedImages = bgSubCK.getConvertedImages();
+    }
+
+    // Display images
+    int row = 0;
+    int col = 0;
+    int imgCols = convertedImages[0].cols/10;
+    int imgRows = convertedImages[0].rows/10;
+    for(int i=0; i < 4; i++){
+        cv::Mat imgMat;
+        cv::resize(convertedImages[i], imgMat, cv::Size(imgCols, imgRows));
+        QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgMat.data, imgMat.cols, imgMat.rows, QImage::Format_RGB888));
+        CamViewer* camView = new CamViewer(subjectImgList.begin()->first, imgMap);
+        camView->setMaximumSize(imgMat.cols, imgMat.rows);
+        gridViewer->addWidget(camView,row,col,1,1);
+        if(col >= 4){
+            col = 0;
+            row++;
+        }else{
+            col++;
+        }
+    }
+
+    /*QSpacerItem* spacerh = new QSpacerItem(viewer->width(), imgRows, QSizePolicy::Expanding, QSizePolicy::Minimum);
+    QSpacerItem* sparcev = new QSpacerItem(imgCols, viewer->height(), QSizePolicy::Minimum, QSizePolicy::Expanding);
+    gridViewer->addItem(spacerh,row,5,1,1);
+    gridViewer->addItem(sparcev,5,col,1,1);*/
+
+}
+
+///////////////////////////////////////////////// CAMVIEWER /////////////////////////////////////////////////
+
+CamViewer::CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent){
+    // parent
+    setParent(parent);
+
+    // widgets
+    win = new QWidget(this);
+
+    title = new QLabel(text, this);
+    title->setStyleSheet("QLabel {color: white;}");
+    title->setAlignment(Qt::AlignCenter);
+
+    pixMap = new QLabel(this);
+    pixMap->setPixmap(pixmap);
+    pixMap->setMinimumHeight(50);
+
+    // layout
+    vLayout = new QVBoxLayout();
+    vLayout->addWidget(title);
+    vLayout->addWidget(pixMap);
+    win->setLayout(vLayout);
+}
+
+CamViewer::CamViewer(QWidget* parent){
+    setParent(parent);
+}
+
+void CamViewer::setText(QString const& text){
+    title->setText(text);
+}
+
+void CamViewer::setPixmap(QPixmap const& pixmap){
+    pixMap->setPixmap(pixmap);
 }
