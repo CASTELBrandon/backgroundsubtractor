@@ -80,4 +80,25 @@ void ImgProcAlgo::clearAllImages(){
     convertedImages.clear();
 }
 
+void ImgProcAlgo::saveImage(const cv::Mat &img, const std::string &filePath){
+    cv::imwrite(filePath, img);
+}
+
+void ImgProcAlgo::saveImages(const std::string &outputPath){
+    int i = 0;
+    for(auto const& img : imagesToProc){
+        // Extract file basename
+        std::string fbase = img.substr(img.find_last_of("/\\") + 1);
+        std::string fname = "Mask-" + fbase;
+        std::string filepath = outputPath + "/" + fname;
+
+        // Get the image to save
+        cv::Mat imgMat = convertedImages[i];
+
+        //Save the image
+        cv::imwrite(filepath, imgMat);
+
+        ++i;
+    }
+}
 

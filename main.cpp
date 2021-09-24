@@ -124,6 +124,12 @@ int main(int argc, char *argv[])
                 filesToProc.push_back(f.filePath().toStdString());
             }
 
+            // Prepare the save folder
+            QDir saveFolder = QDir(QDir(output).filePath(curDir.dirName()));
+            if(!saveFolder.exists()){
+                saveFolder.mkpath(".");
+            }
+
             ////////// GRAYSCALE ALGORITHM //////////
             if(algo == "grayscale"){
                 // Get the rest of the parameters
@@ -161,6 +167,9 @@ int main(int argc, char *argv[])
                 // Process
                 BackgroundSubtractorGS bgSubGS(filesToProc, backImages, threshold, backNum);
                 bgSubGS.process();
+
+                // Save the images
+                bgSubGS.saveImages(saveFolder.absolutePath().toStdString());
             }
 
             ////////// CHROMAKEY ALGORITHM //////////
@@ -182,7 +191,13 @@ int main(int argc, char *argv[])
                 // Process
                 BackgroundSubtractorCK bgSubCK(filesToProc, darkPixel, lightPixel, threshold);
                 bgSubCK.process();
+
+                // Save the images
+                bgSubCK.saveImages(saveFolder.absolutePath().toStdString());
             }
+
+            qDebug() << curDir.absolutePath() << " processed";
+
         }
 
         return 0;

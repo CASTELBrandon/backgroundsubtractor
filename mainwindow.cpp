@@ -256,16 +256,20 @@ void MainWindow::changeImages(QString const& text){
 
     if(!convertedImages.empty()){
         auto imgList = subjectImgList.begin()->second;
+        bool found = false;
         for(size_t i = 0; i < imgList.size(); i++){
             QFileInfo infFile(QString::fromStdString(imgList[i]));
             if(infFile.baseName() == text){
                 showImage(i);
+                found = true;
                 break;
             }
         }
-        QString msg = QString("Index of the image %1 was not found.").arg(text);
-        qCritical() << msg;
-        QMessageBox::critical(this, "Error", msg);
+        if(!found){
+            QString msg = QString("Index of the image %1 was not found.").arg(text);
+            qCritical() << msg;
+            QMessageBox::critical(this, "Error", msg);
+        }
     }
 }
 

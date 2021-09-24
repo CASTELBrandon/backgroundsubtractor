@@ -27,10 +27,13 @@ public:
     void replaceImagesToTreat(std::vector<std::string> const& imagePathList);
     bool isImgSequenceEmpty() const;
     std::vector<cv::Mat> getConvertedImages();
-    void showConvertedImage(size_t const& imageNumber, std::string const& windowName = "Converted image");
     inline void clearImagesToConvert() {imagesToProc.clear();};
     inline void clearConvertedImages() {convertedImages.clear();};
     virtual void clearAllImages();
+
+    void showConvertedImage(size_t const& imageNumber, std::string const& windowName = "Converted image");
+    void saveImage(cv::Mat const& img, std::string const& filePath);
+    void saveImages(std::string const& outputPath);
 
 protected:
     std::vector<std::string> imagesToProc;
