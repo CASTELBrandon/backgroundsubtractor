@@ -76,9 +76,14 @@ std::vector<cv::Mat> ImgProcAlgo::getConvertedImages(){
      return convertedImages;
 }
 
+std::vector<cv::Mat> ImgProcAlgo::getOriginalImages(){
+    return originalImages;
+}
+
 void ImgProcAlgo::clearAllImages(){
     imagesToProc.clear();
     convertedImages.clear();
+    originalImages.clear();
 }
 
 void ImgProcAlgo::saveImage(const cv::Mat &img, const std::string &filePath){

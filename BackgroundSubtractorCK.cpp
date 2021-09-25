@@ -119,7 +119,9 @@ void BackgroundSubtractorCK::process(){
     for(std::string const& imgPath : imagesToProc){
         // Initialize the images
         cv::Mat subjectImg = cv::imread(imgPath);
-        originalImages.push_back(subjectImg);
+        cv::Mat originImg;
+        cv::cvtColor(subjectImg, originImg, cv::COLOR_BGR2RGB);
+        originalImages.push_back(originImg);
 
         // Check if we managed to read the image before continuing
         if(!subjectImg.empty()){

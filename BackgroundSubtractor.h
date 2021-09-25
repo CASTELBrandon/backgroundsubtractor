@@ -35,6 +35,7 @@ public:
     // Image lists management
     void saveImages(std::string const& outputPath, Writing::ImageFlags const& flag = Writing::ImageFlags::BOTH);
     void clearAllImages() override;
+    std::vector<cv::Mat> getMaskImages();
 
     // Processing
     static std::vector<cv::Mat> applyMasks(std::vector<cv::Mat> const& RGBImgs ,std::vector<cv::Mat> const& maskImgs);

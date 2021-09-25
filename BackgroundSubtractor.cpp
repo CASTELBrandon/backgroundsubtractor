@@ -25,6 +25,10 @@ void BackgroundSubtractor::clearAllImages(){
     maskImages.clear();
 }
 
+std::vector<cv::Mat> BackgroundSubtractor::getMaskImages(){
+    return maskImages;
+}
+
 void BackgroundSubtractor::saveImages(const std::string &outputPath, Writing::ImageFlags const& flag){
     if(flag == Writing::ImageFlags::MASK){
         ImgProcAlgo::saveImages(outputPath, maskImages, "Mask-");

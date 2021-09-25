@@ -28,6 +28,7 @@ public:
     void replaceImagesToTreat(std::vector<std::string> const& imagePathList);
     bool isImgSequenceEmpty() const;
     std::vector<cv::Mat> getConvertedImages();
+    std::vector<cv::Mat> getOriginalImages();
     inline void clearImagesToConvert() {imagesToProc.clear();};
     inline void clearConvertedImages() {convertedImages.clear();};
     virtual void clearAllImages();

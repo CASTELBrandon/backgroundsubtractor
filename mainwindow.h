@@ -19,12 +19,42 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QSpacerItem>
+#include <QRadioButton>
 
 #include <map>
 
 #include "BackgroundSubtractorGS.h"
 #include "BackgroundSubtractorCK.h"
 #include "PixelRGB.h"
+
+struct ReducedImage
+{
+    ReducedImage(int const& p_width, int const& p_height, QPixmap const& p_pixmap) : width(p_width), height(p_height), pixmap(p_pixmap){};
+    int width;
+    int height;
+    QPixmap pixmap;
+};
+
+
+
+class CamViewer : public QWidget{
+    Q_OBJECT
+
+public:
+    CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent=nullptr);
+    CamViewer(QWidget* parent=nullptr);
+
+public slots:
+    void setText(QString const& text);
+    void setPixmap(QPixmap const& pixmap);
+
+private:
+    QWidget* win;
+    QLabel* title;
+    QLabel* pixMap;
+    QVBoxLayout* vLayout;
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -44,19 +74,23 @@ public slots:
     void nextImage();
     void previousImage();
     void changeImages(QString const& text);
+    void showImage(size_t const& imgNum);
+    void imageTypeSelected();
 
 private:
     /////// METHODS ///////
     void process();
     void preview();
     void setDisabledImgWidgets(bool const& value);
-    void showImage(size_t const& imgNum);
+    std::map<QString, std::vector<cv::Mat>>* getCurrentMatMap();
 
     /////// ATTRIBUTES ///////
     QStringList const algoList = {"grayscale", "chromakey"};
     std::map<QString, std::vector<std::string>> subjectImgList;
     std::map<QString, std::vector<std::string>> backImgList;
     std::map<QString, std::vector<cv::Mat>> convertedImages;
+    std::map<QString, std::vector<cv::Mat>> maskImages;
+    std::map<QString, std::vector<cv::Mat>> originalImages;
 
     // Parameters
     QString inputFolderPath;
@@ -92,27 +126,12 @@ private:
     QPushButton* bNextImage;
     QPushButton* bPrevImage;
     QWidget* viewer;
+    QRadioButton* rbNormal;
+    QRadioButton* rbMask;
+    QRadioButton* rbConverted;
 
     // Layouts
     QGridLayout* gridViewer;
-};
-
-class CamViewer : public QWidget{
-    Q_OBJECT
-
-public:
-    CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent=nullptr);
-    CamViewer(QWidget* parent=nullptr);
-
-public slots:
-    void setText(QString const& text);
-    void setPixmap(QPixmap const& pixmap);
-
-private:
-    QWidget* win;
-    QLabel* title;
-    QLabel* pixMap;
-    QVBoxLayout* vLayout;
 };
 
 #endif // MAINWINDOW_H

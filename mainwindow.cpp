@@ -35,11 +35,17 @@ MainWindow::MainWindow(QWidget *parent)
     viewer->setAutoFillBackground(true);
     viewer->setPalette(pal);
 
+    ////////////////// QRADIOBUTTONS //////////////////
+    rbNormal = new QRadioButton("Normal", this);
+    rbNormal->setChecked(true);
+
+    rbMask = new QRadioButton("Mask", this);
+    rbConverted = new QRadioButton("Converted", this);
+
     ////////////////// QLABELS //////////////////
     QLabel* lInput = new QLabel("Input folder : ");
     QLabel* lAlgo = new QLabel("Algorithm : ");
     QLabel* lThreshold = new QLabel("Threshold : ");
-    QLabel* lImageSelect = new QLabel("Image selection : ");
 
     // Chromakey settings
     // Dark pixel RGB
@@ -118,15 +124,21 @@ MainWindow::MainWindow(QWidget *parent)
     bBackFolder = new QPushButton("Browse");
 
     ////////////////// QGROUPBOX //////////////////
-    QGroupBox* gbSettings = new QGroupBox("Settings");
+    QGroupBox* gbSettings = new QGroupBox("Settings", this);
 
-    QGroupBox* gbSettingsCK = new QGroupBox("Chromakey settings");
+    QGroupBox* gbSettingsCK = new QGroupBox("Chromakey settings", this);
     gbSettingsCK->setMaximumHeight(150);
-    QGroupBox* gbDarkPixel = new QGroupBox("Dark pixel");
-    QGroupBox* gbLightPixel = new QGroupBox("Light pixel");
+    QGroupBox* gbDarkPixel = new QGroupBox("Dark pixel", this);
+    QGroupBox* gbLightPixel = new QGroupBox("Light pixel", this);
 
-    QGroupBox* gbSettingsGS = new QGroupBox("Grayscale settings");
+    QGroupBox* gbSettingsGS = new QGroupBox("Grayscale settings", this);
     gbSettingsGS->setMaximumHeight(100);
+
+    QGroupBox* gbTypeImage = new QGroupBox("Type of image to show", this);
+    gbTypeImage->setMaximumHeight(50);
+
+    QGroupBox* gbImageSelect = new QGroupBox("Image selection", this);
+    gbImageSelect->setMaximumHeight(50);
 
     ////////////////// QSTACKEDWIDGET //////////////////
     swSettings = new QStackedWidget;
@@ -144,6 +156,20 @@ MainWindow::MainWindow(QWidget *parent)
     // viewer grid
     gridViewer = new QGridLayout;
     viewer->setLayout(gridViewer);
+
+    // Type of image groupbox
+    QHBoxLayout* hlTypeImage = new QHBoxLayout(this);
+    hlTypeImage->addWidget(rbNormal);
+    hlTypeImage->addWidget(rbMask);
+    hlTypeImage->addWidget(rbConverted);
+    gbTypeImage->setLayout(hlTypeImage);
+
+    // Image selection groupbox
+    QGridLayout* gridImageSelect = new QGridLayout(this);
+    gridImageSelect->addWidget(bPrevImage,0,0,1,1);
+    gridImageSelect->addWidget(cbImageList,0,1,1,2);
+    gridImageSelect->addWidget(bNextImage,0,3,0,1);
+    gbImageSelect->setLayout(gridImageSelect);
 
     // Settings grayscale
     QGridLayout* gridGSSet = new QGridLayout;
@@ -180,7 +206,7 @@ MainWindow::MainWindow(QWidget *parent)
     gridSetCK->addWidget(gbDarkPixel,0,0,1,4);
     gridSetCK->addWidget(gbLightPixel,1,0,1,4);
 
-    // Settings grid
+    // Settings
     QGridLayout* gridSet = new QGridLayout;
     gridSet->addWidget(lInput,0,0,1,1);
     gridSet->addWidget(leInputFolder, 0,1,1,2);
@@ -198,10 +224,8 @@ MainWindow::MainWindow(QWidget *parent)
     gbSettings->setLayout(gridSet);
 
     // Final placement
-    gridMain->addWidget(lImageSelect, 0,0,1,1);
-    gridMain->addWidget(bPrevImage,0,1,1,1);
-    gridMain->addWidget(cbImageList,0,2,1,2);
-    gridMain->addWidget(bNextImage,0,4,1,1);
+    gridMain->addWidget(gbImageSelect,0,0,1,4);
+    gridMain->addWidget(gbTypeImage,0,5,1,3);
     gridMain->addWidget(viewer,1,0,4,10);
     gridMain->addWidget(gbSettings,0,11,5,1);
 
@@ -218,6 +242,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(bPrevImage, SIGNAL(clicked()), this, SLOT(previousImage()));
     connect(bNextImage, SIGNAL(clicked()), this, SLOT(nextImage()));
     connect(cbImageList, SIGNAL(currentTextChanged(QString)), this, SLOT(changeImages(QString)));
+    connect(rbNormal, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
+    connect(rbMask, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
+    connect(rbConverted, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
 }
 
 MainWindow::~MainWindow()
@@ -248,13 +275,37 @@ void MainWindow::previousImage(){
     }
 }
 
+void MainWindow::imageTypeSelected(){
+    // Get the name of the current image
+    QString text = cbImageList->currentText();
+    changeImages(text);
+}
+
+std::map<QString, std::vector<cv::Mat>>* MainWindow::getCurrentMatMap(){
+    // Check the vector size to analyse
+    std::map<QString, std::vector<cv::Mat>> *matMap = nullptr;
+    if(rbNormal->isChecked()){
+        matMap = &originalImages;
+    }
+    else if(rbMask->isChecked()){
+        matMap = &maskImages;
+    }
+    else if(rbConverted->isChecked()){
+        matMap = &convertedImages;
+    }
+    return matMap;
+}
+
 void MainWindow::changeImages(QString const& text){
     /*
      * This slot will seek the image in argument for each camera and display it in the viewer
      */
     // Seek the index of the value
 
-    if(!convertedImages.empty() && !text.isEmpty()){
+    // Get the current mat map
+    std::map<QString, std::vector<cv::Mat>>* matMap = getCurrentMatMap();
+
+    if(matMap != nullptr && !matMap->empty() && !text.isEmpty()){
         auto imgList = subjectImgList.begin()->second;
         bool found = false;
         for(size_t i = 0; i < imgList.size(); i++){
@@ -273,7 +324,7 @@ void MainWindow::changeImages(QString const& text){
     }
 }
 
-void MainWindow::showImage(size_t const& imgValue){
+void MainWindow::showImage(size_t const& imgNum){
     /*
      * This method show the selected image, for each camera, in the viewer
      */
@@ -281,24 +332,29 @@ void MainWindow::showImage(size_t const& imgValue){
     // Clean the viewer
     cleanViewer();
 
+    // Get the current mat map
+    std::map<QString, std::vector<cv::Mat>>* matMap = getCurrentMatMap();
+
     // Check the image value
-    if(imgValue < convertedImages.begin()->second.size()){
+    if(matMap != nullptr && imgNum < matMap->begin()->second.size()){
         int row = 0;
         int col = 0;
         int imgColsRed = 0;
         int imgRowsRed = 0;
         qDebug() << "Creation of the cam views...";
-        for (auto const& itCam : convertedImages){
+
+        // Check which list we need to show
+        for (auto const& itCam : *matMap){
             qDebug() << "Placement of the camera " << itCam.first;
 
             // Get the selected image
-            cv::Mat firstImg = itCam.second[imgValue];
+            cv::Mat imgMat = itCam.second[imgNum];
 
             // Resize the image
             cv::Mat imgToShow;
-            imgColsRed = firstImg.cols/10;
-            imgRowsRed = firstImg.rows/10;
-            cv::resize(firstImg, imgToShow, cv::Size(firstImg.cols/10, firstImg.rows/10));
+            imgColsRed = imgMat.cols/10;
+            imgRowsRed = imgMat.rows/10;
+            cv::resize(imgMat, imgToShow, cv::Size(imgColsRed, imgRowsRed));
 
             // Create the camViewer widget
             QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgToShow.data, imgToShow.cols, imgToShow.rows, QImage::Format_RGB888));
@@ -330,7 +386,7 @@ void MainWindow::showImage(size_t const& imgValue){
         }
     }
     else{
-        QMessageBox::critical(this, "Error", QString("Unable to find the image number %1.").arg(imgValue));
+        QMessageBox::critical(this, "Error", QString("Unable to find the image number %1.").arg(imgNum));
     }
 
 }
@@ -461,6 +517,8 @@ void MainWindow::process(){
     // Convert each image in each camera folder
     qDebug() << "Processing...";
     convertedImages.clear();
+    maskImages.clear();
+    originalImages.clear();
     for(auto const& itCam : subjectImgList){
         qDebug() << "Calculation of " << itCam.first;
 
@@ -476,8 +534,12 @@ void MainWindow::process(){
             imgPaths.push_back(itCam.second[i]);
         }
 
-        // Check the selected algorithm
+        // Check the selected algorithm and init the background subtractor
+        BackgroundSubtractor *pCurBgSub = nullptr;
         if(algo == Processing::Algorithms::GRAYSCALE){
+            // Set the current background subtractor
+            pCurBgSub = &bgSubGS;
+
             // Get the background images from the first folder
             std::vector<std::string> backImgPaths = backImgList[itCam.first];
 
@@ -487,23 +549,26 @@ void MainWindow::process(){
             bgSubGS.replaceBackgroundImages(backImgPaths);
             bgSubGS.setThreshold(threshold);
             bgSubGS.setBackImgNumber(backNum);
-            bgSubGS.process();
-
-            // Get converted images
-            convertedImages[itCam.first] = bgSubGS.getConvertedImages();
         }
         else if(algo == Processing::Algorithms::CHROMAKEY){
+            // Set the current background subtractor
+            pCurBgSub = &bgSubCK;
+
             // Prepare the BackgroundSubtractor
             bgSubCK.clearAllImages();
             bgSubCK.addImagesToTreat(imgPaths);
             bgSubCK.setThreshold(threshold);
             bgSubCK.setDarkBackPixel(darkPixel);
             bgSubCK.setLightBackPixel(lightPixel);
-            bgSubCK.process();
-
-            // Get converted images
-            convertedImages[itCam.first] = bgSubCK.getConvertedImages();
         }
+
+        // Process
+        pCurBgSub->process();
+
+        // Get converted images
+        originalImages[itCam.first] = pCurBgSub->getOriginalImages();
+        convertedImages[itCam.first] = pCurBgSub->getConvertedImages();
+        maskImages[itCam.first] = pCurBgSub->getMaskImages();
     }
 
     // Show the first image of each camera
