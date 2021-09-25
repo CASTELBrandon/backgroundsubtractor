@@ -468,7 +468,6 @@ void MainWindow::process(){
         std::vector<std::string> imgPaths;
         for(int i = 0; i < 4; i++){
             QFileInfo infFile(QString::fromStdString(itCam.second[i]));
-            qDebug() << "Image to convert : " << infFile.filePath();
 
             // Add the image name in the image combobox
             if(cbImageList->findText(infFile.baseName()) == -1){

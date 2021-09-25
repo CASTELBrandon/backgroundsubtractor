@@ -84,16 +84,31 @@ void ImgProcAlgo::saveImage(const cv::Mat &img, const std::string &filePath){
     cv::imwrite(filePath, img);
 }
 
-void ImgProcAlgo::saveImages(const std::string &outputPath){
+void ImgProcAlgo::saveImages(std::string const& outputPath, std::string const& prefix){
+    saveImages(outputPath, convertedImages, prefix);
+}
+
+void ImgProcAlgo::saveImages(std::string const& outputPath, std::vector<cv::Mat> const& imgsToSave, std::string const& prefix){
+    // Check the two list have the same size
+    if(imgsToSave.size() != imagesToProc.size()){
+        throw std::invalid_argument("The vector of images to be saved must have the same size as the list of images that were to be processed.");
+    }
+
+    // Check if the list of images to process is empty
+    if(imagesToProc.empty()){
+        throw std::runtime_error("The list of image to process is empty.");
+    }
+
+    // Saving
     int i = 0;
     for(auto const& img : imagesToProc){
         // Extract file basename
         std::string fbase = img.substr(img.find_last_of("/\\") + 1);
-        std::string fname = "Mask-" + fbase;
+        std::string fname = prefix + fbase;
         std::string filepath = outputPath + "/" + fname;
 
         // Get the image to save
-        cv::Mat imgMat = convertedImages[i];
+        cv::Mat imgMat = imgsToSave[i];
 
         //Save the image
         cv::imwrite(filepath, imgMat);

@@ -34,7 +34,8 @@ public:
 
     void showConvertedImage(size_t const& imageNumber, std::string const& windowName = "Converted image");
     void saveImage(cv::Mat const& img, std::string const& filePath);
-    void saveImages(std::string const& outputPath);
+    void saveImages(std::string const& outputPath, std::string const& prefix = "RGB-");
+    void saveImages(std::string const& outputPath, std::vector<cv::Mat> const& imgsToSave, std::string const& prefix = "RGB-");
 
 protected:
     std::vector<std::string> imagesToProc;

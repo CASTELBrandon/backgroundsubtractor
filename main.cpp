@@ -10,9 +10,21 @@
 #include "BackgroundSubtractorCK.h"
 #include "PixelRGB.h"
 
-std::array<QString, 4> MAIN_PARAM_TO_SET = {"input", "output", "algorithm", "threshold"};
-std::array<QString, 4> MAIN_PARAM_TO_SET_CMD = {"-i", "-o", "-a", "-t"};
+std::array<QString, 3> MAIN_PARAM_TO_SET = {"input", "output", "algorithm"};
+std::array<QString, 3> MAIN_PARAM_TO_SET_CMD = {"-i", "-o", "-a"};
 std::array<QString, 2> ALGOLIST = {"chromakey", "grayscale"};
+
+void saveImages(BackgroundSubtractor bgSub, std::string const& saveFolder, QString const& saveOpt){
+    if(saveOpt == "BOTH"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::BOTH);
+    }
+    else if(saveOpt == "MASK"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::MASK);
+    }
+    else if(saveOpt == "RGB"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::RGB);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -42,14 +54,20 @@ int main(int argc, char *argv[])
         QCommandLineOption algorithmOption(QStringList() << "a" << "algorithm", "Select the background removal algorithm you want to use to create the masking images : 'chromakey' or 'grayscale'", "name");
         parser.addOption(algorithmOption);
 
-        QCommandLineOption thresholdOption(QStringList() << "t" << "threshold", "Select a threshold value between 0 and 255, to define the calculation precision of the algorithms.", "value");
+        QCommandLineOption thresholdOption(QStringList() << "t" << "threshold", "Select a threshold value between 0 and 255, to define the calculation precision of the algorithms. By default, 20.", "value");
         parser.addOption(thresholdOption);
+
+        QCommandLineOption imageOption(QStringList() << "img" << "image", "Select if you want to process only mask images or also apply the masks on the RGB images. By default, the both images will be process. Options : 'RGB' or 'MASK'", "process choice");
+        parser.addOption(imageOption);
+
+        QCommandLineOption saveOption(QStringList() << "s" << "save", "Select if you want to save the RGB images and the mask images, or only one of them. By default, only RGB images will be saved. Options : 'RGB', 'MASK', 'BOTH'.", "save choice");
+        parser.addOption(saveOption);
 
         // Grayscale options
         QCommandLineOption backgroundPathOption(QStringList() << "bg" << "background", "Folder which constains multiple sequences of camera images of background.", "path");
         parser.addOption(backgroundPathOption);
 
-        QCommandLineOption backgroundNumOption(QStringList() << "bgnum" << "backgroundnumber", "For each camera folder, the 'grayscale' algorithm will select a background image to compare with all the images of the moving subject, from the corresponding camera. So you need to choose a background image number if you use this algorithm.", "path");
+        QCommandLineOption backgroundNumOption(QStringList() << "bgnum" << "backgroundnumber", "For each camera folder, the 'grayscale' algorithm will select a background image to compare with all the images of the moving subject, from the corresponding camera. So you need to choose a background image number if you use this algorithm. By default, 1.", "path");
         parser.addOption(backgroundNumOption);
 
         // Chromakey options
@@ -63,8 +81,17 @@ int main(int argc, char *argv[])
         // Process commands
         parser.process(a);
 
+        // Init variables
+        QString input;
+        QString output;
+        QString algo;
+        int threshold;
+        int backNum;
+        QString imgProcOpt;
+        QString saveOpt;
+
         // Check if a input and output folder, and a threshold value are set
-        if(!(parser.isSet(inputOption) && parser.isSet(outputOption) && parser.isSet(thresholdOption) && parser.isSet(algorithmOption))){
+        if(!(parser.isSet(inputOption) && parser.isSet(outputOption) && parser.isSet(algorithmOption))){
             qCritical() << "Error : if you are using the command line system, you must specified the following parameters :";
             for(int i=0; i< (int)MAIN_PARAM_TO_SET.size(); i++){
                 qCritical() << "\t" << MAIN_PARAM_TO_SET[i] << "\t" << MAIN_PARAM_TO_SET_CMD[i];
@@ -78,6 +105,30 @@ int main(int argc, char *argv[])
             return -1;
         }
 
+        // Check the threshold option
+        if(!parser.isSet(thresholdOption)){
+            threshold = 20;
+        }
+        else{
+            threshold = parser.value(thresholdOption).toInt();
+        }
+
+        // Check the image option
+        if(!parser.isSet(imageOption)){
+            imgProcOpt = "RGB";
+        }
+        else{
+            imgProcOpt = parser.value(imageOption);
+        }
+
+        // Check the save option
+        if(!parser.isSet(saveOption)){
+            saveOpt = "BOTH";
+        }
+        else{
+            saveOpt = parser.value(saveOption);
+        }
+
         // Check if the grayscale algorithm has been selected
         if(parser.isSet(algorithmOption) && parser.value(algorithmOption) == "grayscale"){
             // Check if a background folder path has been specified
@@ -88,8 +139,9 @@ int main(int argc, char *argv[])
 
             // Check if a number of background image has been specified
             if(!parser.isSet(backgroundNumOption)){
-                qCritical() << "Error : if you want to use the 'grayscale' algorithm, you must specify a background number. See help command (-h) for more details.";
-                return -1;
+                backNum = 1;
+            }else{
+                backNum = parser.value(backgroundNumOption).toInt();
             }
         }
 
@@ -103,10 +155,9 @@ int main(int argc, char *argv[])
         }
 
         // Get main values
-        QString input   = parser.value(inputOption);
-        QString output  = parser.value(outputOption);
-        QString algo    = parser.value(algorithmOption);
-        int threshold   = parser.value(thresholdOption).toInt();
+        input   = parser.value(inputOption);
+        output  = parser.value(outputOption);
+        algo    = parser.value(algorithmOption);
 
         // Init process
         QDirIterator itFold(input, {"cam*"}, QDir::Dirs | QDir::NoDotAndDotDot);
@@ -133,7 +184,6 @@ int main(int argc, char *argv[])
             ////////// GRAYSCALE ALGORITHM //////////
             if(algo == "grayscale"){
                 // Get the rest of the parameters
-                int backNum = parser.value(backgroundNumOption).toInt();
                 QString backFolder = parser.value(backgroundPathOption);
 
                 // Get background file pathes
@@ -166,10 +216,13 @@ int main(int argc, char *argv[])
 
                 // Process
                 BackgroundSubtractorGS bgSubGS(filesToProc, backImages, threshold, backNum);
+                if(imgProcOpt == "MASK"){
+                    bgSubGS.setFlag(Processing::ImageFlags::MASK);
+                }
                 bgSubGS.process();
 
                 // Save the images
-                bgSubGS.saveImages(saveFolder.absolutePath().toStdString());
+                saveImages(bgSubGS, saveFolder.absolutePath().toStdString(), saveOpt);
             }
 
             ////////// CHROMAKEY ALGORITHM //////////
@@ -190,10 +243,13 @@ int main(int argc, char *argv[])
 
                 // Process
                 BackgroundSubtractorCK bgSubCK(filesToProc, darkPixel, lightPixel, threshold);
+                if(imgProcOpt == "MASK"){
+                    bgSubCK.setFlag(Processing::ImageFlags::MASK);
+                }
                 bgSubCK.process();
 
                 // Save the images
-                bgSubCK.saveImages(saveFolder.absolutePath().toStdString());
+                saveImages(bgSubCK, saveFolder.absolutePath().toStdString(), saveOpt);
             }
 
             qDebug() << curDir.absolutePath() << " processed";

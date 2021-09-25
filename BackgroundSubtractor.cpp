@@ -25,8 +25,24 @@ void BackgroundSubtractor::clearAllImages(){
     maskImages.clear();
 }
 
-/*void BackgroundSubtractor::saveImages(const std::string &outputPath, Writing::ImageFlags const& flag){
-}*/
+void BackgroundSubtractor::saveImages(const std::string &outputPath, Writing::ImageFlags const& flag){
+    if(flag == Writing::ImageFlags::MASK){
+        ImgProcAlgo::saveImages(outputPath, maskImages, "Mask-");
+    }
+
+    if(imgFlag == Processing::ImageFlags::RGB){
+        if(flag == Writing::ImageFlags::RGB){
+            ImgProcAlgo::saveImages(outputPath);
+        }
+        else if(flag == Writing::ImageFlags::BOTH){
+            ImgProcAlgo::saveImages(outputPath);
+            ImgProcAlgo::saveImages(outputPath, maskImages, "Mask-");
+        }
+    }
+    else if(imgFlag == Processing::ImageFlags::MASK && (flag == Writing::ImageFlags::RGB || flag == Writing::ImageFlags::BOTH)){
+        throw std::runtime_error("You want to save the RGB images, but you processed only mask images. Restart a new process with RGB images to save them.");
+    }
+}
 
 /**
  * @brief Apply the mask img on the RGB image in parameter.

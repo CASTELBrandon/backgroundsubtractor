@@ -33,7 +33,7 @@ public:
     void setFlag(Processing::ImageFlags const& flags);
 
     // Image lists management
-    //void saveImages(std::string const& outputPath, Writing::ImageFlags const& flag = Writing::ImageFlags::BOTH);
+    void saveImages(std::string const& outputPath, Writing::ImageFlags const& flag = Writing::ImageFlags::BOTH);
     void clearAllImages() override;
 
     // Processing
