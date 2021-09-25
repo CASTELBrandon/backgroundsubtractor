@@ -13,6 +13,7 @@ SOURCES += \
     BackgroundSubtractorCK.cpp \
     BackgroundSubtractorGS.cpp \
     ImgProcAlgo.cpp \
+    MyThread.cpp \
     PixelRGB.cpp \
     main.cpp \
     mainwindow.cpp
@@ -22,6 +23,7 @@ HEADERS += \
     BackgroundSubtractorCK.h \
     BackgroundSubtractorGS.h \
     ImgProcAlgo.h \
+    MyThread.h \
     PixelRGB.h \
     mainwindow.h
 

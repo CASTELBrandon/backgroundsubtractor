@@ -27,16 +27,6 @@
 #include "BackgroundSubtractorCK.h"
 #include "PixelRGB.h"
 
-struct ReducedImage
-{
-    ReducedImage(int const& p_width, int const& p_height, QPixmap const& p_pixmap) : width(p_width), height(p_height), pixmap(p_pixmap){};
-    int width;
-    int height;
-    QPixmap pixmap;
-};
-
-
-
 class CamViewer : public QWidget{
     Q_OBJECT
 
