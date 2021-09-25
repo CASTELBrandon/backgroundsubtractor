@@ -37,6 +37,7 @@ void ImgProcAlgo::showConvertedImage(size_t const& imageNumber, std::string cons
     if(imageNumber < convertedImages.size()){
         cv::Mat img;
         cv::resize(convertedImages[imageNumber], img, cv::Size(convertedImages[imageNumber].cols/2, convertedImages[imageNumber].rows/2));
+        cv::cvtColor(convertedImages[imageNumber], img, cv::COLOR_BGR2RGB);
         cv::imshow(windowName, img);
     }
     else{
@@ -108,7 +109,8 @@ void ImgProcAlgo::saveImages(std::string const& outputPath, std::vector<cv::Mat>
         std::string filepath = outputPath + "/" + fname;
 
         // Get the image to save
-        cv::Mat imgMat = imgsToSave[i];
+        cv::Mat imgMat;
+        cv::cvtColor(imgsToSave[i], imgMat, cv::COLOR_BGR2RGB);
 
         //Save the image
         cv::imwrite(filepath, imgMat);
