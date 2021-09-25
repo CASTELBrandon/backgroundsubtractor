@@ -20,12 +20,18 @@
 #include <QDebug>
 #include <QSpacerItem>
 #include <QRadioButton>
+#include <QMutex>
 
 #include <map>
 
 #include "BackgroundSubtractorGS.h"
 #include "BackgroundSubtractorCK.h"
 #include "PixelRGB.h"
+#include "MyThread.h"
+#include "Worker.h"
+
+using MATSTRING = std::map<QString, std::vector<std::string>>;
+using MATMAP = std::map<QString, std::vector<cv::Mat> >;
 
 class CamViewer : public QWidget{
     Q_OBJECT
@@ -54,7 +60,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    std::map<QString, std::vector<std::string>> collectCamImgPaths(QString const& sequenceFolder);
+    MATSTRING collectCamImgPaths(QString const& sequenceFolder);
 
 public slots:
     void changeSettings(int const& index);
@@ -66,21 +72,29 @@ public slots:
     void changeImages(QString const& text);
     void showImage(size_t const& imgNum);
     void imageTypeSelected();
+    void processDone(BackgroundSubtractor* pBgSub, QString const& camName);
 
 private:
     /////// METHODS ///////
     void process();
     void preview();
     void setDisabledImgWidgets(bool const& value);
-    std::map<QString, std::vector<cv::Mat>>* getCurrentMatMap();
+    MATMAP* getCurrentMatMap();
+    MATMAP sortMatMap(MATMAP& matMap);
 
     /////// ATTRIBUTES ///////
     QStringList const algoList = {"grayscale", "chromakey"};
-    std::map<QString, std::vector<std::string>> subjectImgList;
-    std::map<QString, std::vector<std::string>> backImgList;
-    std::map<QString, std::vector<cv::Mat>> convertedImages;
-    std::map<QString, std::vector<cv::Mat>> maskImages;
-    std::map<QString, std::vector<cv::Mat>> originalImages;
+
+    // Image lists
+    MATSTRING subjectImgList;
+    MATSTRING backImgList;
+    MATMAP convertedImages;
+    MATMAP maskImages;
+    MATMAP originalImages;
+
+    // Background subtractors
+    BackgroundSubtractorCK bgSubCK;
+    BackgroundSubtractorGS bgSubGS;
 
     // Parameters
     QString inputFolderPath;
@@ -90,10 +104,6 @@ private:
     int backNum;
     PixelRGB darkPixel;
     PixelRGB lightPixel;
-
-    // Background subtractor
-    BackgroundSubtractorCK bgSubCK;
-    BackgroundSubtractorGS bgSubGS;
 
     // Widgets
     QStackedWidget* swSettings;
@@ -122,6 +132,10 @@ private:
 
     // Layouts
     QGridLayout* gridViewer;
+
+    // Thread
+    QMutex mutex;
+    std::vector<MyThread*> threadList;
 };
 
 #endif // MAINWINDOW_H

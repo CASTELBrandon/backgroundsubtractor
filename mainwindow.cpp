@@ -281,9 +281,9 @@ void MainWindow::imageTypeSelected(){
     changeImages(text);
 }
 
-std::map<QString, std::vector<cv::Mat>>* MainWindow::getCurrentMatMap(){
+MATMAP* MainWindow::getCurrentMatMap(){
     // Check the vector size to analyse
-    std::map<QString, std::vector<cv::Mat>> *matMap = nullptr;
+    MATMAP *matMap = nullptr;
     if(rbNormal->isChecked()){
         matMap = &originalImages;
     }
@@ -303,7 +303,7 @@ void MainWindow::changeImages(QString const& text){
     // Seek the index of the value
 
     // Get the current mat map
-    std::map<QString, std::vector<cv::Mat>>* matMap = getCurrentMatMap();
+    MATMAP* matMap = getCurrentMatMap();
 
     if(matMap != nullptr && !matMap->empty() && !text.isEmpty()){
         auto imgList = subjectImgList.begin()->second;
@@ -333,7 +333,7 @@ void MainWindow::showImage(size_t const& imgNum){
     cleanViewer();
 
     // Get the current mat map
-    std::map<QString, std::vector<cv::Mat>>* matMap = getCurrentMatMap();
+    MATMAP* matMap = getCurrentMatMap();
 
     // Check the image value
     if(matMap != nullptr && imgNum < matMap->begin()->second.size()){
@@ -417,11 +417,76 @@ void MainWindow::getFolder(){
     }
 }
 
+MATMAP MainWindow::sortMatMap(MATMAP& matMap){
+    // Get the name of each cam
+    QStringList camNames;
+    for(auto const& itCam : matMap){
+        camNames << itCam.first;
+    }
+
+    // Sort the cam names
+    camNames.sort();
+
+    // Create new sorted map
+    MATMAP sortedMap;
+    for(auto const& camNam : camNames){
+        sortedMap[camNam] = matMap[camNam];
+    }
+    return sortedMap;
+}
+
+void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camName){
+    // Get converted images
+    mutex.lock();
+    qDebug() << "\nThread cam : " << camName;
+    originalImages[camName] = pBgSub->getOriginalImages();
+    convertedImages[camName] = pBgSub->getConvertedImages();
+    maskImages[camName] = pBgSub->getMaskImages();
+    mutex.unlock();
+
+    qDebug() << "Number of cam : " << originalImages.size();
+    qDebug() << "Number of images for 1 cam : " << originalImages.begin()->second.size();
+
+    // Check if each thread are done
+    bool allFinished = true;
+    for(auto const& t : threadList){
+        if(!t->isFinished()){
+            allFinished = false;
+        }
+    }
+
+    if(allFinished && threadList.size() == originalImages.size()){
+        qDebug() << "All thread are finished !";
+
+        // Delete all thread
+        for(auto const& t : threadList){
+            t->deleteLater();
+        }
+
+        // Clear the vector
+        threadList.clear();
+
+        // Sort all image lists because threads may have finished their calculations in random order
+        qDebug() << "Sorting image lists...";
+        originalImages = sortMatMap(originalImages);
+        convertedImages = sortMatMap(convertedImages);
+        maskImages = sortMatMap(maskImages);
+
+        // Show the first image of each camera
+        showImage(0);
+
+        // Set enable the widgets
+        setDisabledImgWidgets(false);
+
+        qDebug() << "Processing done !";
+    }
+}
+
 //////////// PROCESSING METHODS AND SLOTS ////////////
 
-std::map<QString, std::vector<std::string> > MainWindow::collectCamImgPaths(const QString &sequenceFolder){
+MATSTRING MainWindow::collectCamImgPaths(const QString &sequenceFolder){
     // Init the map
-    std::map<QString, std::vector<std::string>> camImgList;
+    MATSTRING camImgList;
 
     // Loop through all cam folder to find each image of the sequence
     QDirIterator itFold(sequenceFolder, {"cam*"}, QDir::Dirs | QDir::NoDotAndDotDot);
@@ -514,11 +579,13 @@ void MainWindow::preview(){
 }
 
 void MainWindow::process(){
-    // Convert each image in each camera folder
+    // Clear the lists
     qDebug() << "Processing...";
     convertedImages.clear();
     maskImages.clear();
     originalImages.clear();
+
+    // Loop over each camera to process each image
     for(auto const& itCam : subjectImgList){
         qDebug() << "Calculation of " << itCam.first;
 
@@ -535,11 +602,7 @@ void MainWindow::process(){
         }
 
         // Check the selected algorithm and init the background subtractor
-        BackgroundSubtractor *pCurBgSub = nullptr;
         if(algo == Processing::Algorithms::GRAYSCALE){
-            // Set the current background subtractor
-            pCurBgSub = &bgSubGS;
-
             // Get the background images from the first folder
             std::vector<std::string> backImgPaths = backImgList[itCam.first];
 
@@ -549,35 +612,26 @@ void MainWindow::process(){
             bgSubGS.replaceBackgroundImages(backImgPaths);
             bgSubGS.setThreshold(threshold);
             bgSubGS.setBackImgNumber(backNum);
+
+            MyThread* mythread = new MyThread(bgSubGS, itCam.first);
+            connect(mythread, SIGNAL(processDone(BackgroundSubtractor*, QString)), this, SLOT(processDone(BackgroundSubtractor*, QString)));
+            mythread->start();
+            threadList.push_back(mythread);
         }
         else if(algo == Processing::Algorithms::CHROMAKEY){
-            // Set the current background subtractor
-            pCurBgSub = &bgSubCK;
-
             // Prepare the BackgroundSubtractor
             bgSubCK.clearAllImages();
             bgSubCK.addImagesToTreat(imgPaths);
             bgSubCK.setThreshold(threshold);
             bgSubCK.setDarkBackPixel(darkPixel);
             bgSubCK.setLightBackPixel(lightPixel);
+
+            MyThread* mythread = new MyThread(bgSubCK, itCam.first);
+            connect(mythread, SIGNAL(processDone(BackgroundSubtractor*, QString)), this, SLOT(processDone(BackgroundSubtractor*, QString)));
+            mythread->start();
+            threadList.push_back(mythread);
         }
-
-        // Process
-        pCurBgSub->process();
-
-        // Get converted images
-        originalImages[itCam.first] = pCurBgSub->getOriginalImages();
-        convertedImages[itCam.first] = pCurBgSub->getConvertedImages();
-        maskImages[itCam.first] = pCurBgSub->getMaskImages();
     }
-
-    // Show the first image of each camera
-    showImage(0);
-
-    // Set enable the widgets
-    setDisabledImgWidgets(false);
-
-    qDebug() << "Processing done !";
 }
 
 
