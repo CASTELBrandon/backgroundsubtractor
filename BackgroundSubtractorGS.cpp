@@ -31,6 +31,13 @@ void BackgroundSubtractorGS::setBackImgNumber(const int &value){
 
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
+/**
+ * @brief Convert two RGB pixels in their corresponding grayscale and calculate the difference between them.
+ * @param pixelA : first RGB pixel.
+ * @param pixelB : second RGB pixel.
+ * @param threshold
+ * @return A grayscale pixel.
+ */
 PixelRGB BackgroundSubtractorGS::pixelDiffRgb2Gray(PixelRGB const& pixelA, PixelRGB const& pixelB, int const& threshold){
     PixelRGB pixelDiff;
 
@@ -50,6 +57,13 @@ PixelRGB BackgroundSubtractorGS::pixelDiffRgb2Gray(PixelRGB const& pixelA, Pixel
     return pixelDiff;
 }
 
+/**
+ * @brief Calculate a mask image based on the grayscale difference between two RGB images.
+ * @param imageA : first RGB image.
+ * @param imageB : second RGB image.
+ * @param threshold
+ * @return A mask image.
+ */
 cv::Mat BackgroundSubtractorGS::imgMaskCalculation(cv::Mat const& imageA, cv::Mat const& imageB, int const& threshold){
     /*
      * This method calculate a difference between two images by converting the RGB values of each pixel by a corresponding luminosity value (Y).
@@ -105,6 +119,9 @@ cv::Mat BackgroundSubtractorGS::imgMaskCalculation(cv::Mat const& imageA, cv::Ma
     return imgMask;
 }
 
+/**
+ * @brief Subtract the background from each image to be processed.
+ */
 void BackgroundSubtractorGS::process(){
     // Call parent method
     ImgProcAlgo::process();

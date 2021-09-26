@@ -10,6 +10,11 @@ ImgProcAlgo::ImgProcAlgo(std::vector<std::string> const& imagePathList){
 
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
+/**
+ * @brief Create a new grayscale matrix based on the image to be processed as a parameter.
+ * @param imgToProc : matrix to convert.
+ * @return A grayscale matrix.
+ */
 cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     // Init grayscale mat
     cv::Mat grayImg = cv::Mat(imgToProc.rows, imgToProc.cols, CV_8UC1, cv::Scalar(0));
@@ -33,6 +38,11 @@ cv::Mat ImgProcAlgo::convertImgBGR2GRAY(cv::Mat const& imgToProc){
     return grayImg;
 }
 
+/**
+ * @brief Open a window to show the selected converted image.
+ * @param imageNumber : number of the image to show.
+ * @param windowName : name of the window.
+ */
 void ImgProcAlgo::showConvertedImage(size_t const& imageNumber, std::string const& windowName){
     if(imageNumber < convertedImages.size()){
         cv::Mat img;
@@ -45,6 +55,9 @@ void ImgProcAlgo::showConvertedImage(size_t const& imageNumber, std::string cons
     }
 }
 
+/**
+ * @brief Parent 'process' method which checks if there are images to process.
+ */
 void ImgProcAlgo::process(){
     // Check if there are images to process
     if(isImgSequenceEmpty()){
@@ -86,6 +99,11 @@ void ImgProcAlgo::clearAllImages(){
     originalImages.clear();
 }
 
+/**
+ * @brief Save a specifix matrix.
+ * @param img : matrix to save.
+ * @param filePath : path where to save.
+ */
 void ImgProcAlgo::saveImage(const cv::Mat &img, const std::string &filePath){
     cv::imwrite(filePath, img);
 }
@@ -94,6 +112,12 @@ void ImgProcAlgo::saveImages(std::string const& outputPath, std::string const& p
     saveImages(outputPath, convertedImages, prefix);
 }
 
+/**
+ * @brief Save a matrix list
+ * @param outputPath : folder path where to save the images
+ * @param imgsToSave : list of matrix to save
+ * @param prefix : a short name at the beginning of each file name
+ */
 void ImgProcAlgo::saveImages(std::string const& outputPath, std::vector<cv::Mat> const& imgsToSave, std::string const& prefix){
     // Check the two list have the same size
     if(imgsToSave.size() != imagesToProc.size()){

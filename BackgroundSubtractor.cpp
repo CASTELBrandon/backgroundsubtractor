@@ -20,6 +20,9 @@ void BackgroundSubtractor::setFlag(const Processing::ImageFlags &flags){
     imgFlag = flags;
 }
 
+/**
+ * @brief Clear all image lists
+ */
 void BackgroundSubtractor::clearAllImages(){
     ImgProcAlgo::clearAllImages();
     maskImages.clear();
@@ -29,6 +32,12 @@ std::vector<cv::Mat> BackgroundSubtractor::getMaskImages(){
     return maskImages;
 }
 
+
+/**
+ * @brief Save the images based on the selected flag.
+ * @param outputPath : output folder where to save the images.
+ * @param flag : Type of images to save.
+ */
 void BackgroundSubtractor::saveImages(const std::string &outputPath, Writing::ImageFlags const& flag){
     if(flag == Writing::ImageFlags::MASK){
         ImgProcAlgo::saveImages(outputPath, maskImages, "Mask-");

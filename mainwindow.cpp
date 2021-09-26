@@ -273,6 +273,8 @@ MainWindow::~MainWindow()
 {
 }
 
+//////////// MANAGEMENT METHODS AND SLOTS ////////////
+
 void MainWindow::changeSettings(int const& index){
     swSettings->setCurrentIndex(index);
 }
@@ -298,6 +300,9 @@ void MainWindow::setDisabledNumImgs(){
     }
 }
 
+/**
+ * @brief Set the QComboBox of image list to the next image.
+ */
 void MainWindow::nextImage(){
     int index = cbImageList->currentIndex()+1;
     if(index < cbImageList->count()){
@@ -305,6 +310,9 @@ void MainWindow::nextImage(){
     }
 }
 
+/**
+ * @brief Set the QComboBox of image list to the previous image.
+ */
 void MainWindow::previousImage(){
     int index = cbImageList->currentIndex()-1;
     if(index >= 0){
@@ -312,12 +320,19 @@ void MainWindow::previousImage(){
     }
 }
 
+/**
+ * @brief Slot called when we select a new type of image (Normal, Mask or Converted).
+ */
 void MainWindow::imageTypeSelected(){
     // Get the name of the current image
     QString text = cbImageList->currentText();
     changeImages(text);
 }
 
+/**
+ * @brief Get a pointer of the selected image list card.
+ * @return A pointer of a MATMAP.
+ */
 MATMAP* MainWindow::getCurrentMatMap(){
     // Check the vector size to analyse
     MATMAP *matMap = nullptr;
@@ -333,6 +348,10 @@ MATMAP* MainWindow::getCurrentMatMap(){
     return matMap;
 }
 
+/**
+ * @brief Try to find the selected image (combobox image list) into the selected MATMAP, and show this image for each camera in the viewer.
+ * @param text : Image name.
+ */
 void MainWindow::changeImages(QString const& text){
     /*
      * This slot will seek the image in argument for each camera and display it in the viewer
@@ -359,6 +378,10 @@ void MainWindow::changeImages(QString const& text){
     }
 }
 
+/**
+ * @brief Clean the viewer and create each camView, for each camera, to show the selected image in the viewer.
+ * @param imgNum : Number of the image to show.
+ */
 void MainWindow::showImage(size_t const& imgNum){
     /*
      * This method show the selected image, for each camera, in the viewer
@@ -424,6 +447,9 @@ void MainWindow::showImage(size_t const& imgNum){
 
 }
 
+/**
+ * @brief Clean all camView already in the viewer (grid).
+ */
 void MainWindow::cleanViewer(){
     /*
      * Clean all the camViews in the viewer
@@ -435,6 +461,9 @@ void MainWindow::cleanViewer(){
     }
 }
 
+/**
+ * @brief Slot called when the user click on a button "browse", to allows him to select a folder.
+ */
 void MainWindow::getFolder(){
     // Create sender object to know which widget called this slot
     QObject* obj = sender();
@@ -450,6 +479,13 @@ void MainWindow::getFolder(){
     }
 }
 
+//////////// PROCESSING METHODS AND SLOTS ////////////
+
+/**
+ * @brief When all processing threads are finished, it may be in random order, therefore we sort each image list alphabetically, based on camera names.
+ * @param matMap : MATMAP to sort.
+ * @return A sorted MATMAP.
+ */
 MATMAP MainWindow::sortMatMap(MATMAP& matMap){
     // Get the name of each cam
     QStringList camNames;
@@ -468,6 +504,11 @@ MATMAP MainWindow::sortMatMap(MATMAP& matMap){
     return sortedMap;
 }
 
+/**
+ * @brief Slot called when a processing thread is finished.
+ * @param pBgSub : A pointer to the background subtractor of the thread.
+ * @param camName : Thread camera name (each thread processes a camera).
+ */
 void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camName){
     // Get converted images
     mutex.lock();
@@ -517,8 +558,11 @@ void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camNam
     }
 }
 
-//////////// PROCESSING METHODS AND SLOTS ////////////
-
+/**
+ * @brief Collect each image path in each camera folder.
+ * @param sequenceFolder : Folder path with all camera folders
+ * @return A MATSTRING with all image pathes in each camera folder.
+ */
 MATSTRING MainWindow::collectCamImgPaths(const QString &sequenceFolder){
     // Init the map
     MATSTRING camImgList;
@@ -540,6 +584,9 @@ MATSTRING MainWindow::collectCamImgPaths(const QString &sequenceFolder){
     return camImgList;
 }
 
+/**
+ * @brief Collect each parameters based on the user choices, check the potential errors, and run the selected processing.
+ */
 void MainWindow::switcher(){
     // Show message box to alert the user that this method will reset all images
     QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning", "This will reset all images. Are you sure ?", QMessageBox::Yes | QMessageBox::No);
@@ -606,6 +653,9 @@ void MainWindow::switcher(){
 
 }
 
+/**
+ * @brief Process the first image of the first camera to preview the result with the selected parameters.
+ */
 void MainWindow::preview(){
     // Take the first image to process within input folder
     std::string imgPath = subjectImgList.begin()->second[0];
@@ -636,6 +686,9 @@ void MainWindow::preview(){
     }
 }
 
+/**
+ * @brief Process all images in cameras folders, from the input folder, or only the selected number of images.
+ */
 void MainWindow::process(){
     qDebug() << "Processing...";
     msgB->show();
@@ -711,6 +764,12 @@ void MainWindow::process(){
 
 ///////////////////////////////////////////////// CAMVIEWER /////////////////////////////////////////////////
 
+/**
+ * @brief A camvView allows to show a camera image in the viewer.
+ * @param text : camera name.
+ * @param pixmap : image to show.
+ * @param parent : parent widget
+ */
 CamViewer::CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent){
     // parent
     setParent(parent);

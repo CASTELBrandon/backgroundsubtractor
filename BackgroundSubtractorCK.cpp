@@ -37,21 +37,29 @@ void BackgroundSubtractorCK::setLightBackPixel(const PixelRGB &pixel){
 
 /////////////////////////////////// IMAGE PROCESSING ///////////////////////////////////
 
+/**
+ * @brief This method calculate the difference between a pixel value and a color range. If the value is in the range, it returns 0.
+ * @param pixelValue : colored pixel to check.
+ * @param min : minimum of the colored range.
+ * @param max : maximum of the colored range.
+ * @return
+ */
 int BackgroundSubtractorCK::calculateRangeDiff(int const& pixelValue, int const& min, int const& max){
-    /*
-     * This method calculate the difference between a pixel value and a color range. If the value is in the range, it returns 0.
-     */
     if(pixelValue < min) return min - pixelValue;
     if(pixelValue > max) return pixelValue - max;
 
     return 0;
 }
 
-
+/**
+ * @brief Return a black pixel if the pixel in parameter is in the color range, and a white pixel otherwise.
+ * @param pixelToCheck
+ * @param darkBackPixel : dark pixel of the background, or the color to subtract.
+ * @param lightBackPixel : light pixel of the background, or the color to subtract.
+ * @param threshold
+ * @return A thresholded pixel
+ */
 PixelRGB BackgroundSubtractorCK::calculateDiffPixel(PixelRGB const& pixelToCheck, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
-    /*
-     * Return a black pixel if the pixel in parameter is in the color range, and a white pixel otherwise.
-     */
     // Check if darkbackpixel or lightbackpixel contains a color
     if(darkBackPixel == 0 || lightBackPixel == 0){
         throw std::invalid_argument("The DarkBackPixel and lightBackPixel must contain a colored pixel, therefore different from {0,0,0}.");
@@ -77,6 +85,14 @@ PixelRGB BackgroundSubtractorCK::calculateDiffPixel(PixelRGB const& pixelToCheck
     return pixelDiff;
 }
 
+/**
+ * @brief Calculate a mask image based on the selected color range and an image.
+ * @param image : image to process
+ * @param darkBackPixel : dark pixel of the background, or the color to subtract.
+ * @param lightBackPixel : light pixel of the background, or the color to subtract.
+ * @param threshold
+ * @return A mask image
+ */
 cv::Mat BackgroundSubtractorCK::imgMaskCalculation(const cv::Mat &image, PixelRGB const& darkBackPixel, PixelRGB const& lightBackPixel, int const& threshold){
     // Check if it is a RGB image
     if(image.channels() != 3){
@@ -88,7 +104,7 @@ cv::Mat BackgroundSubtractorCK::imgMaskCalculation(const cv::Mat &image, PixelRG
         throw std::invalid_argument("The threshold value must be between 0 and 255");
     }
 
-    // Init differencing image
+    // Init the mask image
     cv::Mat imgMask = cv::Mat(image.rows, image.cols, CV_8UC3);
 
     // Process
@@ -111,6 +127,9 @@ cv::Mat BackgroundSubtractorCK::imgMaskCalculation(const cv::Mat &image, PixelRG
     return imgMask;
 }
 
+/**
+ * @brief Subtract the colored background from each image to be processed.
+ */
 void BackgroundSubtractorCK::process(){
     // Call parent method
     ImgProcAlgo::process();

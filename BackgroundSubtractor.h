@@ -16,7 +16,7 @@ namespace Processing {
 
 namespace Writing {
      /**
-     * @brief it allows to select if the user want to save the mask images, the RGB images, or both.
+     * @brief It allows to select if the user want to save the mask images, the RGB images, or both.
      */
     enum ImageFlags {MASK, RGB, BOTH};
 }

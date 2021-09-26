@@ -14,6 +14,12 @@ std::array<QString, 3> MAIN_PARAM_TO_SET = {"input", "output", "algorithm"};
 std::array<QString, 3> MAIN_PARAM_TO_SET_CMD = {"-i", "-o", "-a"};
 std::array<QString, 2> ALGOLIST = {"chromakey", "grayscale"};
 
+/**
+ * @brief Save the selected images (RGB, Mask or both).
+ * @param bgSub : background subtractor which contains the images to save.
+ * @param saveFolder : output folder where to save the images.
+ * @param saveOpt : type of image to save.
+ */
 void saveImages(BackgroundSubtractor bgSub, std::string const& saveFolder, QString const& saveOpt){
     if(saveOpt == "BOTH"){
         bgSub.saveImages(saveFolder, Writing::ImageFlags::BOTH);
