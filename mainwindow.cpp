@@ -410,9 +410,8 @@ void MainWindow::showImage(size_t const& imgNum){
 
             // Create the camViewer widget
             CamViewer* camView = new CamViewer(itCam.first, imgMat, imgColsRed, imgRowsRed);
-            camView->setMaximumSize(imgColsRed, imgRowsRed);
-            gridViewer->addWidget(camView,row,col,1,1);
             connect(camView, SIGNAL(doubleClicked()), camView, SLOT(showImage()));
+            gridViewer->addWidget(camView,row,col,1,1);
 
             // Check grid
             if(col >= 3 && row <= 2){
@@ -783,11 +782,12 @@ CamViewer::CamViewer(QString const& text, cv::Mat const& mat, int const& col, in
     title = new QLabel(text, this);
     title->setStyleSheet("QLabel {color: white;}");
     title->setAlignment(Qt::AlignCenter);
+    title->setMaximumHeight(10);
 
     pixMap = new QLabel(this);
-    QPixmap pixmap = QPixmap::fromImage(QImage((unsigned char*) imgPixmap.data, imgPixmap.cols, imgPixmap.rows, QImage::Format_RGB888));
+    QPixmap pixmap = QPixmap::fromImage(QImage((unsigned char*) imgPixmap.data, col, row, QImage::Format_RGB888));
     pixMap->setPixmap(pixmap);
-    pixMap->setMinimumHeight(50);
+    pixMap->setMaximumSize(col,row);
 
     // layout
     vLayout = new QVBoxLayout();
