@@ -148,3 +148,12 @@ void ImgProcAlgo::saveImages(std::string const& outputPath, std::vector<cv::Mat>
     }
 }
 
+/////////////////////////////////// EXECUTION TIME METHODS ///////////////////////////////////
+void ImgProcAlgo::startChrono(){
+    execStart = std::chrono::steady_clock::now();
+}
+
+void ImgProcAlgo::showElapsedTime(){
+    std::cout << "Elapsed execution time : " << std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - execStart).count() << "ms" << std::endl;
+}
+

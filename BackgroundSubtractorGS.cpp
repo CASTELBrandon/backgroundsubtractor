@@ -123,6 +123,9 @@ cv::Mat BackgroundSubtractorGS::imgMaskCalculation(cv::Mat const& imageA, cv::Ma
  * @brief Subtract the background from each image to be processed.
  */
 void BackgroundSubtractorGS::process(){
+    // Start chrono
+    startChrono();
+
     // Call parent method
     ImgProcAlgo::process();
 
@@ -156,6 +159,9 @@ void BackgroundSubtractorGS::process(){
             }
         }
     }
+
+    // Show the execution elapsed time
+    showElapsedTime();
 }
 
 /////////////////////////////////// SEQUENCE METHODS ///////////////////////////////////

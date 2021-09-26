@@ -512,7 +512,7 @@ MATMAP MainWindow::sortMatMap(MATMAP& matMap){
 void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camName){
     // Get converted images
     mutex.lock();
-    qDebug() << "\nThread cam finished: " << camName;
+    qDebug() << "Thread cam finished: " << camName;
     originalImages[camName] = pBgSub->getOriginalImages();
     convertedImages[camName] = pBgSub->getConvertedImages();
     maskImages[camName] = pBgSub->getMaskImages();

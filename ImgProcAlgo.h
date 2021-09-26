@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <chrono>
 
 #include "PixelRGB.h"
 
@@ -42,6 +43,11 @@ protected:
     std::vector<std::string> imagesToProc;
     std::vector<cv::Mat> convertedImages;
     std::vector<cv::Mat> originalImages;
+
+    // Execution time methods and variables
+    std::chrono::time_point<std::chrono::steady_clock> execStart;
+    void startChrono();
+    void showElapsedTime();
 };
 
 #endif // IMGPROCALGO_H

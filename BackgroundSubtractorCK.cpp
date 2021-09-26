@@ -131,6 +131,9 @@ cv::Mat BackgroundSubtractorCK::imgMaskCalculation(const cv::Mat &image, PixelRG
  * @brief Subtract the colored background from each image to be processed.
  */
 void BackgroundSubtractorCK::process(){
+    // Start chrono
+    startChrono();
+
     // Call parent method
     ImgProcAlgo::process();
 
@@ -156,4 +159,7 @@ void BackgroundSubtractorCK::process(){
             }
         }
     }
+
+    // Show the execution elapsed time
+    showElapsedTime();
 }
