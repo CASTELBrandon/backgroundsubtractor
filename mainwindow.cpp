@@ -405,18 +405,14 @@ void MainWindow::showImage(size_t const& imgNum){
         for (auto const& itCam : *matMap){
             // Get the selected image
             cv::Mat imgMat = itCam.second[imgNum];
-
-            // Resize the image
-            cv::Mat imgToShow;
-            imgColsRed = imgMat.cols/10;
-            imgRowsRed = imgMat.rows/10;
-            cv::resize(imgMat, imgToShow, cv::Size(imgColsRed, imgRowsRed));
+            int imgColsRed = imgMat.cols/10;
+            int imgRowsRed = imgMat.rows/10;
 
             // Create the camViewer widget
-            QPixmap imgMap = QPixmap::fromImage(QImage((unsigned char*) imgToShow.data, imgToShow.cols, imgToShow.rows, QImage::Format_RGB888));
-            CamViewer* camView = new CamViewer(itCam.first, imgMap);
-            camView->setMaximumSize(imgToShow.cols, imgToShow.rows);
+            CamViewer* camView = new CamViewer(itCam.first, imgMat, imgColsRed, imgRowsRed);
+            camView->setMaximumSize(imgColsRed, imgRowsRed);
             gridViewer->addWidget(camView,row,col,1,1);
+            connect(camView, SIGNAL(doubleClicked()), camView, SLOT(showImage()));
 
             // Check grid
             if(col >= 3 && row <= 2){
@@ -770,15 +766,26 @@ void MainWindow::process(){
  * @param pixmap : image to show.
  * @param parent : parent widget
  */
-CamViewer::CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent){
+CamViewer::CamViewer(QString const& text, cv::Mat const& mat, int const& col, int const& row, QWidget* parent){
     // parent
     setParent(parent);
 
+    // Resize and convert the image to show
+    cv::Mat resizedImg;
+    cv::resize(mat, resizedImg, cv::Size(mat.cols/2, mat.rows/2));
+    cv::cvtColor(resizedImg, img, cv::COLOR_BGR2RGB);
+
+    // Resize the image for pixmap
+    cv::Mat imgPixmap;
+    cv::resize(mat, imgPixmap, cv::Size(col, row));
+
+    name = text;
     title = new QLabel(text, this);
     title->setStyleSheet("QLabel {color: white;}");
     title->setAlignment(Qt::AlignCenter);
 
     pixMap = new QLabel(this);
+    QPixmap pixmap = QPixmap::fromImage(QImage((unsigned char*) imgPixmap.data, imgPixmap.cols, imgPixmap.rows, QImage::Format_RGB888));
     pixMap->setPixmap(pixmap);
     pixMap->setMinimumHeight(50);
 
@@ -799,4 +806,12 @@ void CamViewer::setText(QString const& text){
 
 void CamViewer::setPixmap(QPixmap const& pixmap){
     pixMap->setPixmap(pixmap);
+}
+
+void CamViewer::showImage(){
+    cv::imshow(name.toStdString(), img);
+}
+
+void CamViewer::mouseDoubleClickEvent(QMouseEvent *event){
+    emit doubleClicked();
 }

@@ -37,18 +37,26 @@ class CamViewer : public QWidget{
     Q_OBJECT
 
 public:
-    CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent=nullptr);
+    CamViewer(QString const& text, cv::Mat const& mat, int const& col, int const& row, QWidget* parent=nullptr);
     CamViewer(QWidget* parent=nullptr);
 
 public slots:
     void setText(QString const& text);
     void setPixmap(QPixmap const& pixmap);
+    void showImage();
+
+signals:
+    void doubleClicked();
 
 private:
     QWidget* win;
     QLabel* title;
     QLabel* pixMap;
     QVBoxLayout* vLayout;
+    cv::Mat img;
+    QString name;
+
+    void mouseDoubleClickEvent(QMouseEvent *event);
 };
 
 
