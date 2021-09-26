@@ -25,43 +25,62 @@ MainWindow::MainWindow(QWidget *parent)
      **************************************/
     ////////////////// QWIDGETS //////////////////
     // Main QWidget
-    QWidget* mainWidget = new QWidget; setCentralWidget(mainWidget);
+    QWidget* mainWidget = new QWidget(this); setCentralWidget(mainWidget);
 
     // View QWidget
-    viewer = new QWidget;
+    viewer = new QWidget(this);
     viewer->setMinimumSize(this->width()/3, this->height()/3);
     QPalette pal = viewer->palette();
     pal.setColor(QPalette::Background, QColor(150,150,150));
     viewer->setAutoFillBackground(true);
     viewer->setPalette(pal);
 
+    ////////////////// QGROUPBOX //////////////////
+    QGroupBox* gbSettings = new QGroupBox("Settings", mainWidget);
+
+    QGroupBox* gbSettingsCK = new QGroupBox("Chromakey settings", gbSettings);
+    gbSettingsCK->setMaximumHeight(150);
+    QGroupBox* gbDarkPixel = new QGroupBox("Dark pixel", gbSettingsCK);
+    QGroupBox* gbLightPixel = new QGroupBox("Light pixel", gbSettingsCK);
+
+    QGroupBox* gbSettingsGS = new QGroupBox("Grayscale settings", gbSettings);
+    gbSettingsGS->setMaximumHeight(100);
+
+    QGroupBox* gbTypeImage = new QGroupBox("Type of image to show", mainWidget);
+    gbTypeImage->setMaximumHeight(50);
+
+    QGroupBox* gbImageSelect = new QGroupBox("Image selection", mainWidget);
+    gbImageSelect->setMaximumHeight(50);
+
     ////////////////// QRADIOBUTTONS //////////////////
-    rbNormal = new QRadioButton("Normal", this);
+    rbNormal = new QRadioButton("Normal", gbTypeImage);
     rbNormal->setChecked(true);
 
-    rbMask = new QRadioButton("Mask", this);
-    rbConverted = new QRadioButton("Converted", this);
+    rbMask = new QRadioButton("Mask", gbTypeImage);
+    rbConverted = new QRadioButton("Converted", gbTypeImage);
 
     ////////////////// QMESSAGEBOX //////////////////
-    msgB = new QMessageBox(this);
+    msgB = new QMessageBox(QMessageBox::NoIcon, "Waiting...", "Processing...", QMessageBox::Ok, this, Qt::Dialog | Qt::WindowStaysOnTopHint);
     msgB->setWindowTitle("Waiting...");
     msgB->setText("Processing...");
 
+    msgBError = new QMessageBox(QMessageBox::Icon::Critical, "Error", "", QMessageBox::Ok, this, Qt::Dialog | Qt::WindowStaysOnTopHint);
+
     ////////////////// QLABELS //////////////////
-    QLabel* lInput = new QLabel("Input folder : ");
-    QLabel* lAlgo = new QLabel("Algorithm : ");
-    QLabel* lThreshold = new QLabel("Threshold : ");
+    QLabel* lInput = new QLabel("Input folder : ", gbSettings);
+    QLabel* lAlgo = new QLabel("Algorithm : ", gbSettings);
+    QLabel* lThreshold = new QLabel("Threshold : ", gbSettings);
 
     // Chromakey settings
     // Dark pixel RGB
-    QLabel* lDPR = new QLabel("R");
-    QLabel* lDPG = new QLabel("G");
-    QLabel* lDPB = new QLabel("B");
+    QLabel* lDPR = new QLabel("R", gbSettingsCK);
+    QLabel* lDPG = new QLabel("G", gbSettingsCK);
+    QLabel* lDPB = new QLabel("B", gbSettingsCK);
 
     // Light pixel RGB
-    QLabel* lLPR = new QLabel("R");
-    QLabel* lLPG = new QLabel("G");
-    QLabel* lLPB = new QLabel("B");
+    QLabel* lLPR = new QLabel("R", gbSettingsCK);
+    QLabel* lLPG = new QLabel("G", gbSettingsCK);
+    QLabel* lLPB = new QLabel("B", gbSettingsCK);
 
     // Set parameters on all labels
     std::array<QLabel*, 6> labelList = {lDPR, lDPG, lDPB, lLPR, lLPG, lLPB};
@@ -70,23 +89,34 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // Grayscale settings
-    QLabel* lbackFolder = new QLabel("Background folder : ");
-    QLabel* lbackNum = new QLabel("Background number : ");
+    QLabel* lbackFolder = new QLabel("Background folder : ", gbSettingsGS);
+    QLabel* lbackNum = new QLabel("Background number : ", gbSettingsGS);
+
+    ////////////////// QCHECKBOX //////////////////
+    ckbNumberImages = new QCheckBox("Number of images : ", gbSettings);
+    ckbNumberImages->setLayoutDirection(Qt::RightToLeft);
 
     ////////////////// QSPINBOX //////////////////
-    sbThreshold = new QSpinBox;
+    sbThreshold = new QSpinBox(gbSettings);
     sbThreshold->setMaximum(255);
+    sbThreshold->setValue(20);
+
+    sbNumberImages = new QSpinBox(gbSettings);
+    sbNumberImages->setMinimum(1);
+    sbNumberImages->setMaximum(300);
+    sbNumberImages->setDisabled(true);
+    sbNumberImages->setValue(125);;
 
     // Chromakey settings
     // Dark pixel RGB
-    sbDPR = new QSpinBox;
-    sbDPG = new QSpinBox;
-    sbDPB = new QSpinBox;
+    sbDPR = new QSpinBox(gbSettingsCK);
+    sbDPG = new QSpinBox(gbSettingsCK);
+    sbDPB = new QSpinBox(gbSettingsCK);
 
     // Light pixel RGB
-    sbLPR = new QSpinBox;
-    sbLPG = new QSpinBox;
-    sbLPB = new QSpinBox;
+    sbLPR = new QSpinBox(gbSettingsCK);
+    sbLPG = new QSpinBox(gbSettingsCK);
+    sbLPB = new QSpinBox(gbSettingsCK);
 
     // Set parameters on all the spinboxes
     std::array<QSpinBox*, 6> sbList = {sbDPR, sbDPG, sbDPB, sbLPR, sbLPG, sbLPB};
@@ -96,57 +126,40 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // Grayscale settings
-    sbBackNum = new QSpinBox;
+    sbBackNum = new QSpinBox(gbSettingsGS);
     sbBackNum->setMinimum(backNum);
 
     ////////////////// QCOMBOBOX //////////////////
-    cbImageList = new QComboBox;
+    cbImageList = new QComboBox(gbImageSelect);
     cbImageList->setDisabled(true);
 
-    cbAlgo = new QComboBox;
+    cbAlgo = new QComboBox(gbSettings);
     cbAlgo->addItems(algoList);
 
     ////////////////// QLINEEDITS //////////////////
-    leInputFolder = new QLineEdit;
+    leInputFolder = new QLineEdit(gbSettings);
     leInputFolder->setReadOnly(true);
 
-    leBackFolder = new QLineEdit;
+    leBackFolder = new QLineEdit(gbSettingsGS);
     leBackFolder->setReadOnly(true);
 
     ////////////////// QPUSHBUTTON //////////////////
-    bInput = new QPushButton("Browse");
+    bInput = new QPushButton("Browse", gbSettings);
 
-    bNextImage = new QPushButton(">");
+    bNextImage = new QPushButton(">", gbImageSelect);
     bNextImage->setDisabled(true);
-    bPrevImage = new QPushButton("<");
+    bPrevImage = new QPushButton("<", gbImageSelect);
     bPrevImage->setDisabled(true);
 
     //QPushButton* bBackFolder = new QPushButton("Browse");
-    bPreview = new QPushButton("Preview");
-    bProcess = new QPushButton("Process");
+    bPreview = new QPushButton("Preview", mainWidget);
+    bProcess = new QPushButton("Process", mainWidget);
 
     // Grayscale settings
-    bBackFolder = new QPushButton("Browse");
-
-    ////////////////// QGROUPBOX //////////////////
-    QGroupBox* gbSettings = new QGroupBox("Settings", this);
-
-    QGroupBox* gbSettingsCK = new QGroupBox("Chromakey settings", this);
-    gbSettingsCK->setMaximumHeight(150);
-    QGroupBox* gbDarkPixel = new QGroupBox("Dark pixel", this);
-    QGroupBox* gbLightPixel = new QGroupBox("Light pixel", this);
-
-    QGroupBox* gbSettingsGS = new QGroupBox("Grayscale settings", this);
-    gbSettingsGS->setMaximumHeight(100);
-
-    QGroupBox* gbTypeImage = new QGroupBox("Type of image to show", this);
-    gbTypeImage->setMaximumHeight(50);
-
-    QGroupBox* gbImageSelect = new QGroupBox("Image selection", this);
-    gbImageSelect->setMaximumHeight(50);
+    bBackFolder = new QPushButton("Browse", gbSettingsGS);
 
     ////////////////// QSTACKEDWIDGET //////////////////
-    swSettings = new QStackedWidget;
+    swSettings = new QStackedWidget(gbSettings);
     swSettings->addWidget(gbSettingsGS);
     swSettings->addWidget(gbSettingsCK);
     swSettings->setCurrentIndex(0);
@@ -155,29 +168,29 @@ MainWindow::MainWindow(QWidget *parent)
      *              LAYOUTS               *
      **************************************/
     // Main grid
-    QGridLayout* gridMain = new QGridLayout;
+    QGridLayout* gridMain = new QGridLayout(mainWidget);
     mainWidget->setLayout(gridMain);
 
     // viewer grid
-    gridViewer = new QGridLayout;
+    gridViewer = new QGridLayout(viewer);
     viewer->setLayout(gridViewer);
 
     // Type of image groupbox
-    QHBoxLayout* hlTypeImage = new QHBoxLayout(this);
+    QHBoxLayout* hlTypeImage = new QHBoxLayout(gbTypeImage);
     hlTypeImage->addWidget(rbNormal);
     hlTypeImage->addWidget(rbMask);
     hlTypeImage->addWidget(rbConverted);
     gbTypeImage->setLayout(hlTypeImage);
 
     // Image selection groupbox
-    QGridLayout* gridImageSelect = new QGridLayout(this);
+    QGridLayout* gridImageSelect = new QGridLayout(gbImageSelect);
     gridImageSelect->addWidget(bPrevImage,0,0,1,1);
     gridImageSelect->addWidget(cbImageList,0,1,1,2);
     gridImageSelect->addWidget(bNextImage,0,3,0,1);
     gbImageSelect->setLayout(gridImageSelect);
 
     // Settings grayscale
-    QGridLayout* gridGSSet = new QGridLayout;
+    QGridLayout* gridGSSet = new QGridLayout(gbSettingsGS);
     gbSettingsGS->setLayout(gridGSSet);
 
     gridGSSet->addWidget(lbackFolder,0,0,1,1);
@@ -187,10 +200,10 @@ MainWindow::MainWindow(QWidget *parent)
     gridGSSet->addWidget(sbBackNum,1,1,1,1);
 
     // Settings chromakey
-    QGridLayout* gridSetCK = new QGridLayout;
+    QGridLayout* gridSetCK = new QGridLayout(gbSettingsCK);
     gbSettingsCK->setLayout(gridSetCK);
 
-    QHBoxLayout* hblDarkPixel = new QHBoxLayout;
+    QHBoxLayout* hblDarkPixel = new QHBoxLayout(gbDarkPixel);
     gbDarkPixel->setLayout(hblDarkPixel);
     hblDarkPixel->addWidget(lDPR);
     hblDarkPixel->addWidget(sbDPR);
@@ -199,7 +212,7 @@ MainWindow::MainWindow(QWidget *parent)
     hblDarkPixel->addWidget(lDPB);
     hblDarkPixel->addWidget(sbDPB);
 
-    QHBoxLayout* hblLightPixel = new QHBoxLayout;
+    QHBoxLayout* hblLightPixel = new QHBoxLayout(gbLightPixel);
     gbLightPixel->setLayout(hblLightPixel);
     hblLightPixel->addWidget(lLPR);
     hblLightPixel->addWidget(sbLPR);
@@ -212,7 +225,7 @@ MainWindow::MainWindow(QWidget *parent)
     gridSetCK->addWidget(gbLightPixel,1,0,1,4);
 
     // Settings
-    QGridLayout* gridSet = new QGridLayout;
+    QGridLayout* gridSet = new QGridLayout(gbSettings);
     gridSet->addWidget(lInput,0,0,1,1);
     gridSet->addWidget(leInputFolder, 0,1,1,2);
     gridSet->addWidget(bInput, 0,3,1,1);
@@ -223,9 +236,12 @@ MainWindow::MainWindow(QWidget *parent)
     gridSet->addWidget(lThreshold,2,0,1,1);
     gridSet->addWidget(sbThreshold,2,1,1,1);
 
-    gridSet->addWidget(swSettings,3,0,4,4);
-    gridSet->addWidget(bPreview,7,0,1,2);
-    gridSet->addWidget(bProcess,7,2,1,2);
+    gridSet->addWidget(ckbNumberImages,3,0,1,1);
+    gridSet->addWidget(sbNumberImages,3,1,1,1);
+
+    gridSet->addWidget(swSettings,4,0,4,4);
+    gridSet->addWidget(bPreview,7,0,1,1);
+    gridSet->addWidget(bProcess,7,1,1,3);
     gbSettings->setLayout(gridSet);
 
     // Final placement
@@ -250,6 +266,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rbNormal, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
     connect(rbMask, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
     connect(rbConverted, SIGNAL(clicked()), this, SLOT(imageTypeSelected()));
+    connect(ckbNumberImages, SIGNAL(clicked()), this, SLOT(setDisabledNumImgs()));
 }
 
 MainWindow::~MainWindow()
@@ -264,6 +281,21 @@ void MainWindow::setDisabledImgWidgets(bool const& value){
     cbImageList->setDisabled(value);
     bPrevImage->setDisabled(value);
     bNextImage->setDisabled(value);
+}
+
+void MainWindow::setDisabledTypeImgWidgets(bool const& value){
+    rbNormal->setDisabled(value);
+    rbMask->setDisabled(value);
+    rbConverted->setDisabled(value);
+}
+
+void MainWindow::setDisabledNumImgs(){
+    if(ckbNumberImages->isChecked()){
+        sbNumberImages->setDisabled(false);
+    }
+    else{
+        sbNumberImages->setDisabled(true);
+    }
 }
 
 void MainWindow::nextImage(){
@@ -348,8 +380,6 @@ void MainWindow::showImage(size_t const& imgNum){
 
         // Check which list we need to show
         for (auto const& itCam : *matMap){
-            qDebug() << "Placement of the camera " << itCam.first;
-
             // Get the selected image
             cv::Mat imgMat = itCam.second[imgNum];
 
@@ -458,7 +488,7 @@ void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camNam
 
     if(allFinished && threadList.size() == originalImages.size()){
         qDebug() << "All thread are finished !";
-        msgB->close();
+        msgB->setText("Sorting lists...");
 
         // Delete all thread
         for(auto const& t : threadList){
@@ -479,7 +509,10 @@ void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camNam
 
         // Set enable the widgets
         setDisabledImgWidgets(false);
+        setDisabledTypeImgWidgets(false);
 
+        msgB->close();
+        msgB->setText("Processing...");
         qDebug() << "Processing done !";
     }
 }
@@ -514,37 +547,60 @@ void MainWindow::switcher(){
         // Reset images widgets
         cbImageList->clear();
         setDisabledImgWidgets(true);
+        setDisabledTypeImgWidgets(true);
         cleanViewer();
 
         // Collect global parameters
         inputFolderPath = leInputFolder->text();
         algo = cbAlgo->currentIndex();
         threshold = sbThreshold->value();
+        numImgs = sbNumberImages->value();
 
-        // Collect all camera images
-        subjectImgList = collectCamImgPaths(inputFolderPath);
-
-        // Check which algorithm has been chosen
-        if(algo == Processing::Algorithms::GRAYSCALE){
-            // Collect all parameters for the grayscale
-            backFolderPath = leBackFolder->text();
-            backNum = sbBackNum->value();
-
-            // Collect all background images
-            backImgList = collectCamImgPaths(backFolderPath);
+        // Check input folder
+        QString msg;
+        if(inputFolderPath.isEmpty()){
+            msg = "No input folder has been defined.";
+            qDebug() << msg;
+            msgBError->setText(msg);
+            msgBError->exec();
+            setDisabledTypeImgWidgets(false);
         }
-        else if(algo == Processing::Algorithms::CHROMAKEY){
-            darkPixel = {sbDPR->value(), sbDPG->value(), sbDPB->value()};
-            lightPixel = {sbLPR->value(), sbLPG->value(), sbLPB->value()};
-        }
+        else{
+            // Collect all camera images
+            subjectImgList = collectCamImgPaths(inputFolderPath);
 
-        // Check which is the sender widget
-        QObject* obj = sender();
-        if(obj == bPreview){
-            preview();
-        }
-        else if(obj == bProcess){
-            process();
+            // Check which algorithm has been chosen
+            if(algo == Processing::Algorithms::GRAYSCALE){
+                // Collect all parameters for the grayscale
+                backFolderPath = leBackFolder->text();
+                backNum = sbBackNum->value();
+
+                // Collect all background images
+                backImgList = collectCamImgPaths(backFolderPath);
+            }
+            else if(algo == Processing::Algorithms::CHROMAKEY){
+                darkPixel = {sbDPR->value(), sbDPG->value(), sbDPB->value()};
+                lightPixel = {sbLPR->value(), sbLPG->value(), sbLPB->value()};
+            }
+
+            // Check background folder
+            if(algo == Processing::Algorithms::GRAYSCALE && backFolderPath.isEmpty()){
+                msg = "No background folder has been defined.";
+                qDebug() << msg;
+                msgBError->setText(msg);
+                msgBError->exec();
+                setDisabledTypeImgWidgets(false);
+            }
+            else{
+                // Check which is the sender widget
+                QObject* obj = sender();
+                if(obj == bPreview){
+                    preview();
+                }
+                else if(obj == bProcess){
+                    process();
+                }
+            }
         }
     }
 
@@ -581,7 +637,6 @@ void MainWindow::preview(){
 }
 
 void MainWindow::process(){
-    // Execute information message box;
     qDebug() << "Processing...";
     msgB->show();
 
@@ -590,21 +645,33 @@ void MainWindow::process(){
     maskImages.clear();
     originalImages.clear();
 
-
     // Loop over each camera to process each image
     for(auto const& itCam : subjectImgList){
         qDebug() << "Calculation of " << itCam.first;
 
         // Get image paths
         std::vector<std::string> imgPaths;
-        for(int i = 0; i < 4; i++){
-            QFileInfo infFile(QString::fromStdString(itCam.second[i]));
+        if(ckbNumberImages->isChecked()){
+            for(int i = 0; i < numImgs; i++){
+                QFileInfo infFile(QString::fromStdString(itCam.second[i]));
 
-            // Add the image name in the image combobox
-            if(cbImageList->findText(infFile.baseName()) == -1){
-                cbImageList->addItem(infFile.baseName());
+                // Add the image name in the image combobox
+                if(cbImageList->findText(infFile.baseName()) == -1){
+                    cbImageList->addItem(infFile.baseName());
+                }
+                imgPaths.push_back(itCam.second[i]);
             }
-            imgPaths.push_back(itCam.second[i]);
+        }
+        else{
+            for(auto const& i : itCam.second){
+                QFileInfo infFile(QString::fromStdString(i));
+
+                // Add the image name in the image combobox
+                if(cbImageList->findText(infFile.baseName()) == -1){
+                    cbImageList->addItem(infFile.baseName());
+                }
+                imgPaths.push_back(i);
+            }
         }
 
         // Check the selected algorithm and init the background subtractor
@@ -648,9 +715,6 @@ CamViewer::CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent
     // parent
     setParent(parent);
 
-    // widgets
-    win = new QWidget(this);
-
     title = new QLabel(text, this);
     title->setStyleSheet("QLabel {color: white;}");
     title->setAlignment(Qt::AlignCenter);
@@ -663,7 +727,7 @@ CamViewer::CamViewer(QString const& text, QPixmap const& pixmap, QWidget* parent
     vLayout = new QVBoxLayout();
     vLayout->addWidget(title);
     vLayout->addWidget(pixMap);
-    win->setLayout(vLayout);
+    this->setLayout(vLayout);
 }
 
 CamViewer::CamViewer(QWidget* parent){

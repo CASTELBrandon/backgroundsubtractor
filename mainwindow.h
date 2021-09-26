@@ -21,6 +21,7 @@
 #include <QSpacerItem>
 #include <QRadioButton>
 #include <QMutex>
+#include <QCheckBox>
 
 #include <map>
 
@@ -67,6 +68,7 @@ public slots:
     void switcher();
     void cleanViewer();
     void nextImage();
+    void setDisabledNumImgs();
     void previousImage();
     void changeImages(QString const& text);
     void showImage(size_t const& imgNum);
@@ -78,6 +80,7 @@ private:
     void process();
     void preview();
     void setDisabledImgWidgets(bool const& value);
+    void setDisabledTypeImgWidgets(bool const& value);
     MATMAP* getCurrentMatMap();
     MATMAP sortMatMap(MATMAP& matMap);
 
@@ -103,6 +106,7 @@ private:
     int backNum;
     PixelRGB darkPixel;
     PixelRGB lightPixel;
+    int numImgs;
 
     // Widgets
     QStackedWidget* swSettings;
@@ -114,6 +118,8 @@ private:
     QComboBox* cbAlgo;
     QSpinBox* sbThreshold;
     QSpinBox* sbBackNum;
+    QSpinBox* sbNumberImages;
+    QCheckBox* ckbNumberImages;
     QSpinBox* sbDPR;
     QSpinBox* sbDPG;
     QSpinBox* sbDPB;
@@ -129,6 +135,7 @@ private:
     QRadioButton* rbMask;
     QRadioButton* rbConverted;
     QMessageBox* msgB;
+    QMessageBox* msgBError;
 
     // Layouts
     QGridLayout* gridViewer;
