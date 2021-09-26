@@ -42,6 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
     rbMask = new QRadioButton("Mask", this);
     rbConverted = new QRadioButton("Converted", this);
 
+    ////////////////// QMESSAGEBOX //////////////////
+    msgB = new QMessageBox(this);
+    msgB->setWindowTitle("Waiting...");
+    msgB->setText("Processing...");
+
     ////////////////// QLABELS //////////////////
     QLabel* lInput = new QLabel("Input folder : ");
     QLabel* lAlgo = new QLabel("Algorithm : ");
@@ -300,8 +305,6 @@ void MainWindow::changeImages(QString const& text){
     /*
      * This slot will seek the image in argument for each camera and display it in the viewer
      */
-    // Seek the index of the value
-
     // Get the current mat map
     MATMAP* matMap = getCurrentMatMap();
 
@@ -438,14 +441,12 @@ MATMAP MainWindow::sortMatMap(MATMAP& matMap){
 void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camName){
     // Get converted images
     mutex.lock();
-    qDebug() << "\nThread cam : " << camName;
+    qDebug() << "\nThread cam finished: " << camName;
     originalImages[camName] = pBgSub->getOriginalImages();
     convertedImages[camName] = pBgSub->getConvertedImages();
     maskImages[camName] = pBgSub->getMaskImages();
+    msgB->setText(QString("Number of camera processed : %1/%2").arg(originalImages.size()).arg(threadList.size()));
     mutex.unlock();
-
-    qDebug() << "Number of cam : " << originalImages.size();
-    qDebug() << "Number of images for 1 cam : " << originalImages.begin()->second.size();
 
     // Check if each thread are done
     bool allFinished = true;
@@ -457,6 +458,7 @@ void MainWindow::processDone(BackgroundSubtractor* pBgSub, QString const& camNam
 
     if(allFinished && threadList.size() == originalImages.size()){
         qDebug() << "All thread are finished !";
+        msgB->close();
 
         // Delete all thread
         for(auto const& t : threadList){
@@ -579,11 +581,15 @@ void MainWindow::preview(){
 }
 
 void MainWindow::process(){
-    // Clear the lists
+    // Execute information message box;
     qDebug() << "Processing...";
+    msgB->show();
+
+    // Clear the lists
     convertedImages.clear();
     maskImages.clear();
     originalImages.clear();
+
 
     // Loop over each camera to process each image
     for(auto const& itCam : subjectImgList){

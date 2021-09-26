@@ -28,7 +28,6 @@
 #include "BackgroundSubtractorCK.h"
 #include "PixelRGB.h"
 #include "MyThread.h"
-#include "Worker.h"
 
 using MATSTRING = std::map<QString, std::vector<std::string>>;
 using MATMAP = std::map<QString, std::vector<cv::Mat> >;
@@ -129,6 +128,7 @@ private:
     QRadioButton* rbNormal;
     QRadioButton* rbMask;
     QRadioButton* rbConverted;
+    QMessageBox* msgB;
 
     // Layouts
     QGridLayout* gridViewer;
