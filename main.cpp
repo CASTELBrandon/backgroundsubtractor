@@ -20,17 +20,15 @@ std::array<QString, 2> ALGOLIST = {"chromakey", "grayscale"};
  * @param saveFolder : output folder where to save the images.
  * @param saveOpt : type of image to save.
  */
-void saveImages(BackgroundSubtractor* bgSub, std::string const& saveFolder, QString const& saveOpt){
-    if(bgSub != nullptr){
-        if(saveOpt == "BOTH"){
-            bgSub->saveImages(saveFolder, Writing::ImageFlags::BOTH);
-        }
-        else if(saveOpt == "MASK"){
-            bgSub->saveImages(saveFolder, Writing::ImageFlags::MASK);
-        }
-        else if(saveOpt == "RGB"){
-            bgSub->saveImages(saveFolder, Writing::ImageFlags::RGB);
-        }
+void saveImages(BackgroundSubtractor bgSub, std::string const& saveFolder, QString const& saveOpt){
+    if(saveOpt == "BOTH"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::BOTH);
+    }
+    else if(saveOpt == "MASK"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::MASK);
+    }
+    else if(saveOpt == "RGB"){
+        bgSub.saveImages(saveFolder, Writing::ImageFlags::RGB);
     }
 }
 
@@ -190,7 +188,6 @@ int main(int argc, char *argv[])
             }
 
             ////////// GRAYSCALE ALGORITHM //////////
-            BackgroundSubtractor* pBgSub = nullptr;
             if(algo == "grayscale"){
                 // Get the rest of the parameters
                 QString backFolder = parser.value(backgroundPathOption);
@@ -228,7 +225,11 @@ int main(int argc, char *argv[])
                 if(imgProcOpt == "MASK"){
                     bgSubGS.setFlag(Processing::ImageFlags::MASK);
                 }
-                pBgSub = &bgSubGS;
+                bgSubGS.process();
+
+                // Save the images
+                saveImages(bgSubGS, saveFolder.absolutePath().toStdString(), saveOpt);
+
             }
 
             ////////// CHROMAKEY ALGORITHM //////////
@@ -252,14 +253,11 @@ int main(int argc, char *argv[])
                 if(imgProcOpt == "MASK"){
                     bgSubCK.setFlag(Processing::ImageFlags::MASK);
                 }
-                pBgSub = &bgSubCK;
+                bgSubCK.process();
+
+                // Save the images
+                saveImages(bgSubCK, saveFolder.absolutePath().toStdString(), saveOpt);
             }
-
-            // Processing
-            pBgSub->process();
-
-            // Save the images
-            saveImages(pBgSub, saveFolder.absolutePath().toStdString(), saveOpt);
 
             qDebug() << curDir.absolutePath() << " processed";
 
